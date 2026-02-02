@@ -1,0 +1,24 @@
+{
+  "name": "@codementor/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "dev": "bun run --watch ./src/index.ts",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test || true"
+  },
+  "dependencies": {
+    "@codementor/db": "workspace:*",
+    "@codementor/shared": "workspace:*",
+    "@codementor/ai": "workspace:*",
+    "elysia": "^1.2.10"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "typescript": "^5.7.2"
+  }
+}

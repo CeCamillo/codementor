@@ -1,0 +1,8 @@
+# Default owners for everything
+* @cesarcamillo
+
+# Package-specific owners
+/packages/db/ @cesarcamillo
+/packages/ai/ @cesarcamillo
+/apps/cli/ @cesarcamillo
+/apps/api/ @cesarcamillo

@@ -1,0 +1,20 @@
+{
+  "name": "@codementor/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Web app not yet implemented'",
+    "dev": "echo 'Web app not yet implemented'",
+    "lint": "echo 'Web app not yet implemented'",
+    "lint:fix": "echo 'Web app not yet implemented'",
+    "typecheck": "echo 'Web app not yet implemented'",
+    "test": "echo 'Web app not yet implemented'"
+  },
+  "dependencies": {
+    "@codementor/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,657 @@
+{
+  "name": "Web Fundamentals",
+  "version": "1.0.0",
+  "description": "Core web development concepts from basics to advanced patterns",
+  "concepts": [
+    {
+      "id": "html-structure",
+      "name": "HTML Document Structure",
+      "slug": "html-structure",
+      "description": "Understanding the anatomy of an HTML document: doctype, head, body, and semantic elements",
+      "tier": 1,
+      "category": "HTML",
+      "prerequisites": [],
+      "exampleTasks": [
+        "Create a personal profile page with proper semantic markup",
+        "Build a navigation menu using semantic HTML elements"
+      ],
+      "commonMisconceptions": [
+        "Using divs for everything instead of semantic elements",
+        "Forgetting the doctype declaration",
+        "Misunderstanding the difference between head and body content"
+      ],
+      "resources": [
+        {
+          "title": "MDN: HTML basics",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/HTML_basics",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "html-forms",
+      "name": "HTML Forms",
+      "slug": "html-forms",
+      "description": "Creating accessible forms with proper input types, labels, validation attributes, and form submission",
+      "tier": 1,
+      "category": "HTML",
+      "prerequisites": ["html-structure"],
+      "exampleTasks": [
+        "Build a contact form with validation",
+        "Create a multi-step registration form"
+      ],
+      "commonMisconceptions": [
+        "Not associating labels with inputs",
+        "Using placeholder text instead of labels",
+        "Ignoring native HTML5 validation"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Web forms",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn/Forms",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "css-selectors",
+      "name": "CSS Selectors",
+      "slug": "css-selectors",
+      "description": "Understanding CSS selector specificity, combinators, and pseudo-classes",
+      "tier": 1,
+      "category": "CSS",
+      "prerequisites": ["html-structure"],
+      "exampleTasks": [
+        "Style a navigation menu with hover states",
+        "Create alternating row colors in a table without classes"
+      ],
+      "commonMisconceptions": [
+        "Over-relying on IDs and !important",
+        "Not understanding specificity calculations",
+        "Confusing pseudo-classes with pseudo-elements"
+      ],
+      "resources": [
+        {
+          "title": "MDN: CSS Selectors",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "css-box-model",
+      "name": "CSS Box Model",
+      "slug": "css-box-model",
+      "description": "Understanding margin, padding, border, content, and box-sizing",
+      "tier": 1,
+      "category": "CSS",
+      "prerequisites": ["css-selectors"],
+      "exampleTasks": [
+        "Create a card component with proper spacing",
+        "Build a pricing table with consistent box sizing"
+      ],
+      "commonMisconceptions": [
+        "Not understanding margin collapse",
+        "Confusing padding and margin use cases",
+        "Forgetting about box-sizing: border-box"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Box Model",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "css-flexbox",
+      "name": "CSS Flexbox",
+      "slug": "css-flexbox",
+      "description": "One-dimensional layout with flexible containers and items",
+      "tier": 1,
+      "category": "CSS",
+      "prerequisites": ["css-box-model"],
+      "exampleTasks": [
+        "Build a responsive navigation bar",
+        "Create a card grid that wraps properly"
+      ],
+      "commonMisconceptions": [
+        "Using flexbox when grid would be better",
+        "Forgetting about flex-shrink behavior",
+        "Not understanding align-items vs align-content"
+      ],
+      "resources": [
+        {
+          "title": "CSS Tricks: Flexbox Guide",
+          "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
+          "type": "article"
+        }
+      ]
+    },
+    {
+      "id": "css-grid",
+      "name": "CSS Grid",
+      "slug": "css-grid",
+      "description": "Two-dimensional layout system for complex page structures",
+      "tier": 2,
+      "category": "CSS",
+      "prerequisites": ["css-flexbox"],
+      "exampleTasks": [
+        "Create a dashboard layout with sidebar and main content",
+        "Build a photo gallery with varying item sizes"
+      ],
+      "commonMisconceptions": [
+        "Thinking grid replaces flexbox entirely",
+        "Overcomplicating simple layouts with grid",
+        "Not using grid-template-areas for complex layouts"
+      ],
+      "resources": [
+        {
+          "title": "CSS Tricks: Grid Guide",
+          "url": "https://css-tricks.com/snippets/css/complete-guide-grid/",
+          "type": "article"
+        }
+      ]
+    },
+    {
+      "id": "css-responsive",
+      "name": "Responsive Design",
+      "slug": "css-responsive",
+      "description": "Media queries, fluid layouts, and mobile-first design principles",
+      "tier": 2,
+      "category": "CSS",
+      "prerequisites": ["css-flexbox", "css-grid"],
+      "exampleTasks": [
+        "Convert a desktop layout to work on mobile",
+        "Implement a responsive navigation with hamburger menu"
+      ],
+      "commonMisconceptions": [
+        "Using fixed pixel widths for containers",
+        "Not testing on real devices",
+        "Desktop-first instead of mobile-first approach"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Responsive Design",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "js-variables",
+      "name": "JavaScript Variables & Types",
+      "slug": "js-variables",
+      "description": "let, const, var, primitive types, and type coercion",
+      "tier": 1,
+      "category": "JavaScript",
+      "prerequisites": [],
+      "exampleTasks": [
+        "Create a temperature converter",
+        "Build a simple calculator"
+      ],
+      "commonMisconceptions": [
+        "Using var instead of let/const",
+        "Not understanding type coercion pitfalls",
+        "Confusing null and undefined"
+      ],
+      "resources": [
+        {
+          "title": "MDN: JavaScript Data Types",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "js-functions",
+      "name": "JavaScript Functions",
+      "slug": "js-functions",
+      "description": "Function declarations, expressions, arrow functions, and closures",
+      "tier": 1,
+      "category": "JavaScript",
+      "prerequisites": ["js-variables"],
+      "exampleTasks": [
+        "Create a function that calculates compound interest",
+        "Build a word counter function"
+      ],
+      "commonMisconceptions": [
+        "Not understanding 'this' in different contexts",
+        "Confusing function scope with block scope",
+        "Overusing arrow functions when regular functions are clearer"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Functions",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "js-arrays",
+      "name": "JavaScript Arrays",
+      "slug": "js-arrays",
+      "description": "Array methods: map, filter, reduce, find, and immutable patterns",
+      "tier": 1,
+      "category": "JavaScript",
+      "prerequisites": ["js-functions"],
+      "exampleTasks": [
+        "Filter and transform a list of products",
+        "Calculate statistics from an array of numbers"
+      ],
+      "commonMisconceptions": [
+        "Mutating arrays when immutable operations are safer",
+        "Using forEach when map/filter would be cleaner",
+        "Not understanding that sort mutates in place"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Array",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "js-objects",
+      "name": "JavaScript Objects",
+      "slug": "js-objects",
+      "description": "Object creation, property access, destructuring, and spread operator",
+      "tier": 1,
+      "category": "JavaScript",
+      "prerequisites": ["js-functions"],
+      "exampleTasks": [
+        "Model a user profile with nested address",
+        "Merge configuration objects with defaults"
+      ],
+      "commonMisconceptions": [
+        "Not understanding reference vs value",
+        "Shallow copying when deep copy is needed",
+        "Overusing object spread for simple assignments"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Working with Objects",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "dom-manipulation",
+      "name": "DOM Manipulation",
+      "slug": "dom-manipulation",
+      "description": "Selecting, creating, and modifying DOM elements",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["js-arrays", "js-objects", "html-structure"],
+      "exampleTasks": [
+        "Build a dynamic todo list",
+        "Create a simple image carousel"
+      ],
+      "commonMisconceptions": [
+        "Querying the DOM repeatedly instead of caching references",
+        "Using innerHTML when createElement is safer",
+        "Not understanding the difference between NodeList and Array"
+      ],
+      "resources": [
+        {
+          "title": "MDN: DOM Introduction",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "events",
+      "name": "Event Handling",
+      "slug": "events",
+      "description": "Event listeners, event object, bubbling, delegation, and preventing defaults",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["dom-manipulation"],
+      "exampleTasks": [
+        "Build a form with real-time validation",
+        "Create a keyboard-navigable dropdown menu"
+      ],
+      "commonMisconceptions": [
+        "Adding listeners inside loops without delegation",
+        "Not removing event listeners causing memory leaks",
+        "Confusing stopPropagation with preventDefault"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Event Reference",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/Events",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "async-promises",
+      "name": "Promises & Async/Await",
+      "slug": "async-promises",
+      "description": "Asynchronous programming with Promises, async/await, and error handling",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["js-functions"],
+      "exampleTasks": [
+        "Chain multiple API calls with proper error handling",
+        "Implement a retry mechanism for failed requests"
+      ],
+      "commonMisconceptions": [
+        "Not handling promise rejections",
+        "Using async/await in loops incorrectly",
+        "Creating unnecessary promise wrappers"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Using Promises",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "fetch-api",
+      "name": "Fetch API",
+      "slug": "fetch-api",
+      "description": "Making HTTP requests, handling responses, and working with JSON",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["async-promises", "js-objects"],
+      "exampleTasks": [
+        "Build a weather app using a public API",
+        "Create a search feature with debounced API calls"
+      ],
+      "commonMisconceptions": [
+        "Not checking response.ok before parsing",
+        "Forgetting to stringify request bodies",
+        "Not handling network errors separately from HTTP errors"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Fetch API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "local-storage",
+      "name": "Browser Storage",
+      "slug": "local-storage",
+      "description": "localStorage, sessionStorage, and when to use each",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["js-objects"],
+      "exampleTasks": [
+        "Persist user preferences across sessions",
+        "Implement a shopping cart that survives page refresh"
+      ],
+      "commonMisconceptions": [
+        "Storing sensitive data in localStorage",
+        "Not handling quota exceeded errors",
+        "Forgetting to JSON.parse/stringify"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Web Storage API",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "modules",
+      "name": "JavaScript Modules",
+      "slug": "modules",
+      "description": "ES modules, import/export, and module organization patterns",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["js-functions", "js-objects"],
+      "exampleTasks": [
+        "Refactor a single-file app into modules",
+        "Create a utility library with named exports"
+      ],
+      "commonMisconceptions": [
+        "Circular dependency issues",
+        "Default vs named exports confusion",
+        "Not understanding module scope"
+      ],
+      "resources": [
+        {
+          "title": "MDN: JavaScript Modules",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "error-handling",
+      "name": "Error Handling",
+      "slug": "error-handling",
+      "description": "try/catch, custom errors, and graceful degradation",
+      "tier": 2,
+      "category": "JavaScript",
+      "prerequisites": ["js-functions", "async-promises"],
+      "exampleTasks": [
+        "Add comprehensive error handling to an API client",
+        "Create custom error classes for different failure modes"
+      ],
+      "commonMisconceptions": [
+        "Catching errors without handling them meaningfully",
+        "Not using custom error types",
+        "Swallowing errors silently"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Error handling",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "typescript-basics",
+      "name": "TypeScript Basics",
+      "slug": "typescript-basics",
+      "description": "Type annotations, interfaces, type inference, and basic generics",
+      "tier": 2,
+      "category": "TypeScript",
+      "prerequisites": ["js-functions", "js-objects", "js-arrays"],
+      "exampleTasks": [
+        "Convert a JavaScript utility file to TypeScript",
+        "Create typed interfaces for an API response"
+      ],
+      "commonMisconceptions": [
+        "Using 'any' to bypass type errors",
+        "Over-annotating when inference works",
+        "Not understanding structural typing"
+      ],
+      "resources": [
+        {
+          "title": "TypeScript Handbook",
+          "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "react-components",
+      "name": "React Components",
+      "slug": "react-components",
+      "description": "Functional components, JSX, props, and component composition",
+      "tier": 2,
+      "category": "React",
+      "prerequisites": ["js-functions", "js-objects", "modules"],
+      "exampleTasks": [
+        "Build a reusable Button component with variants",
+        "Create a Card component with composition pattern"
+      ],
+      "commonMisconceptions": [
+        "Creating components that are too large",
+        "Prop drilling instead of composition",
+        "Confusing controlled and uncontrolled inputs"
+      ],
+      "resources": [
+        {
+          "title": "React: Components and Props",
+          "url": "https://react.dev/learn/your-first-component",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "react-state",
+      "name": "React State Management",
+      "slug": "react-state",
+      "description": "useState, useReducer, lifting state, and state design patterns",
+      "tier": 2,
+      "category": "React",
+      "prerequisites": ["react-components"],
+      "exampleTasks": [
+        "Build a shopping cart with add/remove functionality",
+        "Create a multi-step form with shared state"
+      ],
+      "commonMisconceptions": [
+        "Putting all state in a single object",
+        "Not understanding batched state updates",
+        "Mutating state directly instead of creating new objects"
+      ],
+      "resources": [
+        {
+          "title": "React: Managing State",
+          "url": "https://react.dev/learn/managing-state",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "react-effects",
+      "name": "React Effects & Lifecycle",
+      "slug": "react-effects",
+      "description": "useEffect, cleanup, dependencies, and common patterns",
+      "tier": 3,
+      "category": "React",
+      "prerequisites": ["react-state", "async-promises"],
+      "exampleTasks": [
+        "Fetch data on component mount with loading states",
+        "Implement a debounced search input"
+      ],
+      "commonMisconceptions": [
+        "Missing dependencies in the dependency array",
+        "Not cleaning up subscriptions and timers",
+        "Using effects for derived state"
+      ],
+      "resources": [
+        {
+          "title": "React: Synchronizing with Effects",
+          "url": "https://react.dev/learn/synchronizing-with-effects",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "react-hooks",
+      "name": "Custom React Hooks",
+      "slug": "react-hooks",
+      "description": "Creating reusable hooks, hook composition, and common patterns",
+      "tier": 3,
+      "category": "React",
+      "prerequisites": ["react-effects", "react-state"],
+      "exampleTasks": [
+        "Create a useLocalStorage hook",
+        "Build a useFetch hook with caching"
+      ],
+      "commonMisconceptions": [
+        "Creating hooks that do too much",
+        "Not following the rules of hooks",
+        "Returning too many values from a hook"
+      ],
+      "resources": [
+        {
+          "title": "React: Reusing Logic with Custom Hooks",
+          "url": "https://react.dev/learn/reusing-logic-with-custom-hooks",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "name": "Web Accessibility",
+      "slug": "accessibility",
+      "description": "ARIA, semantic HTML, keyboard navigation, and screen reader support",
+      "tier": 3,
+      "category": "Best Practices",
+      "prerequisites": ["html-forms", "events", "css-responsive"],
+      "exampleTasks": [
+        "Make a modal dialog fully accessible",
+        "Audit and fix accessibility issues in a form"
+      ],
+      "commonMisconceptions": [
+        "Adding ARIA when semantic HTML would suffice",
+        "Forgetting about keyboard navigation",
+        "Only testing with automated tools"
+      ],
+      "resources": [
+        {
+          "title": "MDN: Accessibility",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/Accessibility",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "testing-basics",
+      "name": "Testing Fundamentals",
+      "slug": "testing-basics",
+      "description": "Unit tests, test structure, assertions, and mocking basics",
+      "tier": 3,
+      "category": "Best Practices",
+      "prerequisites": ["js-functions", "modules"],
+      "exampleTasks": [
+        "Write unit tests for a utility function",
+        "Test a React component with user interactions"
+      ],
+      "commonMisconceptions": [
+        "Testing implementation details instead of behavior",
+        "Over-mocking leading to false confidence",
+        "Not testing edge cases and error paths"
+      ],
+      "resources": [
+        {
+          "title": "Testing Library Docs",
+          "url": "https://testing-library.com/docs/",
+          "type": "documentation"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Web Performance",
+      "slug": "performance",
+      "description": "Core Web Vitals, lazy loading, code splitting, and optimization techniques",
+      "tier": 3,
+      "category": "Best Practices",
+      "prerequisites": ["react-effects", "modules", "fetch-api"],
+      "exampleTasks": [
+        "Implement lazy loading for images",
+        "Optimize a slow React component with memoization"
+      ],
+      "commonMisconceptions": [
+        "Premature optimization",
+        "Not measuring before optimizing",
+        "Over-using useMemo and useCallback"
+      ],
+      "resources": [
+        {
+          "title": "web.dev Performance",
+          "url": "https://web.dev/performance/",
+          "type": "documentation"
+        }
+      ]
+    }
+  ]
+}
