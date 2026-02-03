@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { Command } from 'commander';
+import { login, logout, whoami } from './auth';
 
 const program = new Command();
 
@@ -11,8 +12,22 @@ program
 program
   .command('login')
   .description('Authenticate with CodeMentor')
-  .action(() => {
-    console.log('Login command - not yet implemented');
+  .action(async () => {
+    await login();
+  });
+
+program
+  .command('logout')
+  .description('Sign out of CodeMentor')
+  .action(async () => {
+    await logout();
+  });
+
+program
+  .command('whoami')
+  .description('Display current user information')
+  .action(async () => {
+    await whoami();
   });
 
 program
