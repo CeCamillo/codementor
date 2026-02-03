@@ -8,53 +8,53 @@ CodeMentor is an AI-powered learning platform that teaches web development throu
 
 ### Runtime & Language
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Bun** | JavaScript runtime | Fast startup, native TypeScript support, built-in test runner |
-| **TypeScript** | Language | End-to-end type safety, better DX, reduced runtime errors |
+| Technology     | Purpose            | Rationale                                                     |
+| -------------- | ------------------ | ------------------------------------------------------------- |
+| **Bun**        | JavaScript runtime | Fast startup, native TypeScript support, built-in test runner |
+| **TypeScript** | Language           | End-to-end type safety, better DX, reduced runtime errors     |
 
 ### Monorepo
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
+| Technology    | Purpose      | Rationale                                              |
+| ------------- | ------------ | ------------------------------------------------------ |
 | **Turborepo** | Build system | Fast caching, parallel execution, simple configuration |
 
 ### CLI Application
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Commander.js** | CLI framework | Mature, well-documented, extensive ecosystem |
-| **Ink** | Terminal UI | React-based, composable components for rich TUI |
+| Technology       | Purpose       | Rationale                                       |
+| ---------------- | ------------- | ----------------------------------------------- |
+| **Commander.js** | CLI framework | Mature, well-documented, extensive ecosystem    |
+| **Ink**          | Terminal UI   | React-based, composable components for rich TUI |
 
 ### Backend API
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **ElysiaJS** | Web framework | Bun-native, TypeScript-first, excellent performance |
-| **BetterAuth** | Authentication | Modern, flexible, supports multiple providers |
+| Technology     | Purpose        | Rationale                                           |
+| -------------- | -------------- | --------------------------------------------------- |
+| **ElysiaJS**   | Web framework  | Bun-native, TypeScript-first, excellent performance |
+| **BetterAuth** | Authentication | Modern, flexible, supports multiple providers       |
 
 ### Database
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **PostgreSQL** | Primary database | Robust, JSONB support, excellent for relational data |
-| **Drizzle ORM** | Database toolkit | Type-safe queries, lightweight, great migrations |
+| Technology      | Purpose          | Rationale                                            |
+| --------------- | ---------------- | ---------------------------------------------------- |
+| **PostgreSQL**  | Primary database | Robust, JSONB support, excellent for relational data |
+| **Drizzle ORM** | Database toolkit | Type-safe queries, lightweight, great migrations     |
 
 ### AI Integration
 
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Claude API** | AI provider | Superior reasoning, code understanding, teaching ability |
-| **claude-sonnet-4-20250514** | Code reviews | Deep analysis, nuanced feedback |
-| **claude-haiku** | Quick tasks | Fast responses, cost-efficient for simple operations |
+| Technology                   | Purpose      | Rationale                                                |
+| ---------------------------- | ------------ | -------------------------------------------------------- |
+| **Claude API**               | AI provider  | Superior reasoning, code understanding, teaching ability |
+| **claude-sonnet-4-20250514** | Code reviews | Deep analysis, nuanced feedback                          |
+| **claude-haiku**             | Quick tasks  | Fast responses, cost-efficient for simple operations     |
 
 ### Hosting & Infrastructure
 
-| Service | Purpose | Rationale |
-|---------|---------|-----------|
-| **Railway** / **Render** | API hosting | Easy deployment, PostgreSQL support, good free tier |
-| **Vercel** | Web dashboard | Excellent Next.js support, edge functions |
-| **GitHub Actions** | CI/CD | Native integration, generous free tier |
+| Service                  | Purpose       | Rationale                                           |
+| ------------------------ | ------------- | --------------------------------------------------- |
+| **Railway** / **Render** | API hosting   | Easy deployment, PostgreSQL support, good free tier |
+| **Vercel**               | Web dashboard | Excellent Next.js support, edge functions           |
+| **GitHub Actions**       | CI/CD         | Native integration, generous free tier              |
 
 ## Project Structure
 

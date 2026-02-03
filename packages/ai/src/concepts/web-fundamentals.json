@@ -186,10 +186,7 @@
       "tier": 1,
       "category": "JavaScript",
       "prerequisites": [],
-      "exampleTasks": [
-        "Create a temperature converter",
-        "Build a simple calculator"
-      ],
+      "exampleTasks": ["Create a temperature converter", "Build a simple calculator"],
       "commonMisconceptions": [
         "Using var instead of let/const",
         "Not understanding type coercion pitfalls",
@@ -286,10 +283,7 @@
       "tier": 2,
       "category": "JavaScript",
       "prerequisites": ["js-arrays", "js-objects", "html-structure"],
-      "exampleTasks": [
-        "Build a dynamic todo list",
-        "Create a simple image carousel"
-      ],
+      "exampleTasks": ["Build a dynamic todo list", "Create a simple image carousel"],
       "commonMisconceptions": [
         "Querying the DOM repeatedly instead of caching references",
         "Using innerHTML when createElement is safer",
@@ -561,10 +555,7 @@
       "tier": 3,
       "category": "React",
       "prerequisites": ["react-effects", "react-state"],
-      "exampleTasks": [
-        "Create a useLocalStorage hook",
-        "Build a useFetch hook with caching"
-      ],
+      "exampleTasks": ["Create a useLocalStorage hook", "Build a useFetch hook with caching"],
       "commonMisconceptions": [
         "Creating hooks that do too much",
         "Not following the rules of hooks",
