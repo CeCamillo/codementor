@@ -96,7 +96,7 @@ describe('Auth Config', () => {
     });
 
     it('returns token when no expiry is set', () => {
-      const config = {
+      const config: { accessToken: string; expiresAt?: string } = {
         accessToken: 'test-token',
       };
 

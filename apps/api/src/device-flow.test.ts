@@ -2,6 +2,38 @@ import { describe, it, expect } from 'bun:test';
 import { Elysia } from 'elysia';
 import { randomBytes } from 'crypto';
 
+interface DeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  verification_uri_complete: string;
+  expires_in: number;
+  interval: number;
+}
+
+interface TokenErrorResponse {
+  error: string;
+  error_description?: string;
+}
+
+interface TokenSuccessResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token?: string;
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+}
+
+interface LogoutResponse {
+  success: boolean;
+}
+
 // Test the device code generation logic
 describe('Device Flow Logic', () => {
   describe('generateUserCode', () => {
@@ -74,7 +106,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(200);
 
-      const data = await response.json();
+      const data = (await response.json()) as DeviceCodeResponse;
       expect(data).toHaveProperty('device_code');
       expect(data).toHaveProperty('user_code');
       expect(data).toHaveProperty('verification_uri');
@@ -105,7 +137,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(400);
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenErrorResponse;
       expect(data.error).toBe('authorization_pending');
     });
 
@@ -128,7 +160,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(400);
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenErrorResponse;
       expect(data.error).toBe('expired_token');
     });
 
@@ -151,7 +183,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(400);
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenErrorResponse;
       expect(data.error).toBe('access_denied');
     });
 
@@ -175,7 +207,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(200);
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenSuccessResponse;
       expect(data).toHaveProperty('access_token');
       expect(data).toHaveProperty('token_type', 'Bearer');
       expect(data).toHaveProperty('expires_in');
@@ -200,7 +232,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(401);
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenErrorResponse;
       expect(data.error).toBe('unauthorized');
     });
 
@@ -227,7 +259,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(200);
 
-      const data = await response.json();
+      const data = (await response.json()) as UserResponse;
       expect(data).toHaveProperty('id');
       expect(data).toHaveProperty('email');
       expect(data).toHaveProperty('name');
@@ -271,7 +303,7 @@ describe('Device Flow API Routes', () => {
 
       expect(response.status).toBe(200);
 
-      const data = await response.json();
+      const data = (await response.json()) as LogoutResponse;
       expect(data.success).toBe(true);
     });
   });
