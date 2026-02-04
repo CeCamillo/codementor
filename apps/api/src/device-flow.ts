@@ -136,29 +136,26 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
       }),
     }
   )
-  .get('/verify', async ({ query }) => {
+  .get('/verify', async ({ query, set }) => {
     const { user_code } = query;
+    set.headers['Content-Type'] = 'text/html';
 
     if (!user_code) {
-      return {
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head><title>CodeMentor - Device Authorization</title></head>
-          <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-            <h1>CodeMentor</h1>
-            <h2>Enter Device Code</h2>
-            <form method="GET" action="/auth/device/verify">
-              <input type="text" name="user_code" placeholder="XXXX-XXXX"
-                style="font-size: 24px; padding: 10px; text-align: center; letter-spacing: 2px; text-transform: uppercase;"
-                pattern="[A-Z0-9]{4}-[A-Z0-9]{4}" required />
-              <br/><br/>
-              <button type="submit" style="padding: 10px 20px; font-size: 16px;">Continue</button>
-            </form>
-          </body>
-          </html>
-        `,
-      };
+      return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Device Authorization</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Enter Device Code</h2>
+  <form method="GET" action="/auth/device/verify">
+    <input type="text" name="user_code" placeholder="XXXX-XXXX"
+      style="font-size: 24px; padding: 10px; text-align: center; letter-spacing: 2px; text-transform: uppercase;"
+      pattern="[A-Z0-9]{4}-[A-Z0-9]{4}" required />
+    <br/><br/>
+    <button type="submit" style="padding: 10px 20px; font-size: 16px;">Continue</button>
+  </form>
+</body>
+</html>`;
     }
 
     const [deviceCodeRecord] = await db
@@ -173,53 +170,46 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
       );
 
     if (!deviceCodeRecord) {
-      return {
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head><title>CodeMentor - Invalid Code</title></head>
-          <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-            <h1>CodeMentor</h1>
-            <h2>Invalid or Expired Code</h2>
-            <p>The code you entered is invalid or has expired.</p>
-            <a href="/auth/device/verify">Try Again</a>
-          </body>
-          </html>
-        `,
-      };
+      return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Invalid Code</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Invalid or Expired Code</h2>
+  <p>The code you entered is invalid or has expired.</p>
+  <a href="/auth/device/verify">Try Again</a>
+</body>
+</html>`;
     }
 
     // Show authorization page - in production, this would require login first
-    return {
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head><title>CodeMentor - Authorize Device</title></head>
-        <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-          <h1>CodeMentor</h1>
-          <h2>Authorize CLI Access</h2>
-          <p>A device is requesting access to your CodeMentor account.</p>
-          <p>Code: <strong>${user_code}</strong></p>
-          <form method="POST" action="/auth/device/authorize">
-            <input type="hidden" name="user_code" value="${user_code}" />
-            <button type="submit" name="action" value="approve"
-              style="padding: 10px 20px; font-size: 16px; background: #22c55e; color: white; border: none; margin: 5px;">
-              Approve
-            </button>
-            <button type="submit" name="action" value="deny"
-              style="padding: 10px 20px; font-size: 16px; background: #ef4444; color: white; border: none; margin: 5px;">
-              Deny
-            </button>
-          </form>
-        </body>
-        </html>
-      `,
-    };
+    return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Authorize Device</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Authorize CLI Access</h2>
+  <p>A device is requesting access to your CodeMentor account.</p>
+  <p>Code: <strong>${user_code}</strong></p>
+  <form method="POST" action="/auth/device/authorize">
+    <input type="hidden" name="user_code" value="${user_code}" />
+    <button type="submit" name="action" value="approve"
+      style="padding: 10px 20px; font-size: 16px; background: #22c55e; color: white; border: none; margin: 5px;">
+      Approve
+    </button>
+    <button type="submit" name="action" value="deny"
+      style="padding: 10px 20px; font-size: 16px; background: #ef4444; color: white; border: none; margin: 5px;">
+      Deny
+    </button>
+  </form>
+</body>
+</html>`;
   })
   .post(
     '/authorize',
-    async ({ body }) => {
+    async ({ body, set }) => {
       const { user_code, action } = body;
+      set.headers['Content-Type'] = 'text/html';
 
       const [deviceCodeRecord] = await db
         .select()
@@ -233,19 +223,15 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
         );
 
       if (!deviceCodeRecord) {
-        return {
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head><title>CodeMentor - Error</title></head>
-            <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-              <h1>CodeMentor</h1>
-              <h2>Error</h2>
-              <p>The code has expired or was already used.</p>
-            </body>
-            </html>
-          `,
-        };
+        return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Error</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Error</h2>
+  <p>The code has expired or was already used.</p>
+</body>
+</html>`;
       }
 
       if (action === 'deny') {
@@ -254,19 +240,15 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
           .set({ status: 'denied' })
           .where(eq(deviceCodes.id, deviceCodeRecord.id));
 
-        return {
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head><title>CodeMentor - Denied</title></head>
-            <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-              <h1>CodeMentor</h1>
-              <h2>Access Denied</h2>
-              <p>You have denied access to the CLI. You can close this window.</p>
-            </body>
-            </html>
-          `,
-        };
+        return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Denied</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Access Denied</h2>
+  <p>You have denied access to the CLI. You can close this window.</p>
+</body>
+</html>`;
       }
 
       // For demo purposes, create or get a demo user
@@ -314,19 +296,15 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
         })
         .where(eq(deviceCodes.id, deviceCodeRecord.id));
 
-      return {
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head><title>CodeMentor - Success</title></head>
-          <body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
-            <h1>CodeMentor</h1>
-            <h2>Successfully Authorized!</h2>
-            <p>You have authorized the CLI. You can close this window and return to your terminal.</p>
-          </body>
-          </html>
-        `,
-      };
+      return `<!DOCTYPE html>
+<html>
+<head><title>CodeMentor - Success</title></head>
+<body style="font-family: system-ui; max-width: 400px; margin: 100px auto; text-align: center;">
+  <h1>CodeMentor</h1>
+  <h2>Successfully Authorized!</h2>
+  <p>You have authorized the CLI. You can close this window and return to your terminal.</p>
+</body>
+</html>`;
     },
     {
       body: t.Object({
