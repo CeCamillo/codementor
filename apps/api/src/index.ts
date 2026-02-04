@@ -4,6 +4,7 @@ import { deviceFlowRoutes, userRoutes } from './device-flow';
 import { projectRoutes } from './projects';
 import { taskRoutes } from './tasks';
 import { submissionRoutes } from './submissions';
+import { progressRoutes } from './progress';
 
 const app = new Elysia()
   .use(
@@ -24,6 +25,7 @@ const app = new Elysia()
   .use(projectRoutes)
   .use(taskRoutes)
   .use(submissionRoutes)
+  .use(progressRoutes)
   .listen(3000);
 
 console.log(`CodeMentor API running at ${app.server?.hostname}:${app.server?.port}`);

@@ -4,7 +4,12 @@ import { projects, tasks } from '@codementor/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { generateProject, getConceptById } from '@codementor/ai';
-import type { CreateProjectResponse, Concept } from '@codementor/shared';
+import type {
+  CreateProjectResponse,
+  Concept,
+  ProjectsListResponse,
+  ProjectSwitchResponse,
+} from '@codementor/shared';
 import { validateSession, isValidationError } from './middleware/auth';
 
 interface TaskRecord {
@@ -238,4 +243,114 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
         completedAt: t.completedAt?.toISOString(),
       })),
     };
+  })
+  .get('/list', async ({ headers, set }) => {
+    const validation = await validateSession(headers['authorization']);
+    if (isValidationError(validation)) {
+      set.status = 401;
+      return { error: validation.error, error_description: validation.message };
+    }
+
+    const { user } = validation;
+
+    const userProjects = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.userId, user.id))
+      .orderBy(desc(projects.updatedAt));
+
+    const projectsWithTasks = await Promise.all(
+      userProjects.map(async (p) => {
+        const projectTasks = await db.select().from(tasks).where(eq(tasks.projectId, p.id));
+
+        const completedTasks = projectTasks.filter((t) => t.status === 'completed');
+
+        return {
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          difficulty: p.difficulty as 'beginner' | 'intermediate' | 'advanced',
+          status: p.status as 'not_started' | 'in_progress' | 'completed' | 'abandoned',
+          tasks: {
+            total: projectTasks.length,
+            completed: completedTasks.length,
+          },
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString(),
+        };
+      })
+    );
+
+    const response: ProjectsListResponse = {
+      projects: projectsWithTasks,
+    };
+
+    return response;
+  })
+  .post('/:id/switch', async ({ params, headers, set }) => {
+    const validation = await validateSession(headers['authorization']);
+    if (isValidationError(validation)) {
+      set.status = 401;
+      return { error: validation.error, error_description: validation.message };
+    }
+
+    const { user } = validation;
+
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, params.id), eq(projects.userId, user.id)));
+
+    if (!project) {
+      set.status = 404;
+      return { error: 'not_found', error_description: 'Project not found' };
+    }
+
+    // Reject if project is completed or abandoned
+    if (project.status === 'completed' || project.status === 'abandoned') {
+      set.status = 400;
+      return {
+        error: 'invalid_status',
+        error_description: `Cannot switch to a ${project.status} project`,
+      };
+    }
+
+    // Update status to in_progress if was not_started, and touch updatedAt
+    const newStatus = project.status === 'not_started' ? 'in_progress' : project.status;
+    await db
+      .update(projects)
+      .set({
+        status: newStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(projects.id, project.id));
+
+    // Get current task
+    const projectTasks = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.projectId, project.id))
+      .orderBy(tasks.order);
+
+    const currentTask = projectTasks.find(
+      (t) => t.status === 'available' || t.status === 'in_progress'
+    );
+
+    const response: ProjectSwitchResponse = {
+      success: true,
+      project: {
+        id: project.id,
+        title: project.title,
+        status: newStatus as 'not_started' | 'in_progress',
+      },
+      currentTask: currentTask
+        ? {
+            id: currentTask.id,
+            title: currentTask.title,
+            order: currentTask.order,
+          }
+        : null,
+    };
+
+    return response;
   });

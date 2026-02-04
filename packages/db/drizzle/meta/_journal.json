@@ -8,6 +8,13 @@
       "when": 1770125454054,
       "tag": "0000_slim_maestro",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770245165659,
+      "tag": "0001_mixed_ezekiel_stane",
+      "breakpoints": true
     }
   ]
 }

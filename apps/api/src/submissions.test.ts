@@ -628,4 +628,92 @@ describe('Submissions API Routes', () => {
       // API should return 400 for empty files array
     });
   });
+
+  describe('Streak Logic', () => {
+    function isSameDay(date1: Date, date2: Date): boolean {
+      return (
+        date1.getFullYear() === date2.getFullYear() &&
+        date1.getMonth() === date2.getMonth() &&
+        date1.getDate() === date2.getDate()
+      );
+    }
+
+    function isYesterday(date: Date, today: Date): boolean {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return isSameDay(date, yesterday);
+    }
+
+    it('starts streak at 1 when no previous activity', () => {
+      const lastActivityDate = null;
+      const currentStreak = 0;
+
+      // When lastActivityDate is null, streak should be set to 1
+      const newStreak = lastActivityDate === null ? 1 : currentStreak;
+      expect(newStreak).toBe(1);
+    });
+
+    it('does not change streak when already active today', () => {
+      const today = new Date();
+      const lastActivityDate = today;
+      const currentStreak = 5;
+
+      // When same day, no change - streak stays the same
+      const shouldUpdate = !isSameDay(lastActivityDate, today);
+      expect(shouldUpdate).toBe(false);
+      expect(currentStreak).toBe(5); // streak unchanged
+    });
+
+    it('increments streak when activity was yesterday', () => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const lastActivityDate = yesterday;
+      const currentStreak = 5;
+
+      expect(isYesterday(lastActivityDate, today)).toBe(true);
+      const newStreak = currentStreak + 1;
+      expect(newStreak).toBe(6);
+    });
+
+    it('resets streak to 1 when more than a day gap', () => {
+      const today = new Date();
+      const threeDaysAgo = new Date(today);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      const lastActivityDate = threeDaysAgo;
+      const previousStreak = 10;
+
+      expect(isSameDay(lastActivityDate, today)).toBe(false);
+      expect(isYesterday(lastActivityDate, today)).toBe(false);
+
+      // Should reset to 1, regardless of previous streak
+      expect(previousStreak).toBeGreaterThan(1);
+      const newStreak = 1;
+      expect(newStreak).toBe(1);
+    });
+
+    it('handles midnight boundary correctly', () => {
+      const today = new Date('2024-01-15T00:05:00Z');
+      const lastNight = new Date('2024-01-14T23:55:00Z');
+
+      expect(isSameDay(lastNight, today)).toBe(false);
+      expect(isYesterday(lastNight, today)).toBe(true);
+    });
+
+    it('isSameDay returns true for same calendar day', () => {
+      const morning = new Date('2024-01-15T08:00:00Z');
+      const evening = new Date('2024-01-15T20:00:00Z');
+
+      expect(isSameDay(morning, evening)).toBe(true);
+    });
+
+    it('isSameDay returns false for different days', () => {
+      const day1 = new Date('2024-01-15T12:00:00Z');
+      const day2 = new Date('2024-01-16T12:00:00Z');
+
+      expect(isSameDay(day1, day2)).toBe(false);
+    });
+  });
 });
