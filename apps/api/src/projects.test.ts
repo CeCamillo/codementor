@@ -501,8 +501,8 @@ describe('Project API Routes', () => {
       expect(data.project.currentTaskId).toBe('task-2');
       expect(data.tasks).toBeArray();
       expect(data.tasks.length).toBe(2);
-      expect(data.tasks[0].status).toBe('completed');
-      expect(data.tasks[1].status).toBe('available');
+      expect(data.tasks[0]!.status).toBe('completed');
+      expect(data.tasks[1]!.status).toBe('available');
     });
   });
 
@@ -514,7 +514,7 @@ describe('Project API Routes', () => {
         { order: 3, status: 'locked' },
       ];
 
-      expect(tasks[0].status).toBe('available');
+      expect(tasks[0]!.status).toBe('available');
       expect(tasks.slice(1).every((t) => t.status === 'locked')).toBe(true);
     });
 

@@ -119,8 +119,8 @@ describe('Start Command', () => {
 
       expect(response.project.id).toBe('project-123');
       expect(response.tasks).toHaveLength(2);
-      expect(response.tasks[0].status).toBe('available');
-      expect(response.tasks[1].status).toBe('locked');
+      expect(response.tasks[0]!.status).toBe('available');
+      expect(response.tasks[1]!.status).toBe('locked');
       expect(response.firstTask.objectives).toHaveLength(2);
       expect(response.firstTask.concepts).toHaveLength(1);
     });
@@ -227,7 +227,7 @@ describe('Start Command', () => {
       for (const concept of concepts) {
         expect(concept.name).toBeDefined();
         expect(concept.resources.length).toBeGreaterThan(0);
-        expect(concept.resources[0].url).toMatch(/^https?:\/\//);
+        expect(concept.resources[0]!.url).toMatch(/^https?:\/\//);
       }
     });
   });
