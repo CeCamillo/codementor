@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import { login, logout, whoami } from './auth';
 import { start } from './commands/start';
+import { next } from './commands/next';
 
 const program = new Command();
 
@@ -40,10 +41,11 @@ program
   });
 
 program
-  .command('task')
+  .command('next')
+  .alias('task')
   .description('View current task')
-  .action(() => {
-    console.log('Current task - not yet implemented');
+  .action(async () => {
+    await next();
   });
 
 program

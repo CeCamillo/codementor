@@ -1,10 +1,11 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
-import { projects, tasks, sessions, users } from '@codementor/db/schema';
-import { eq, and, gt, desc } from 'drizzle-orm';
+import { projects, tasks } from '@codementor/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { generateProject, getConceptById } from '@codementor/ai';
 import type { CreateProjectResponse, Concept } from '@codementor/shared';
+import { validateSession, isValidationError } from './middleware/auth';
 
 interface TaskRecord {
   id: string;
@@ -24,35 +25,12 @@ function generateId(): string {
   return randomBytes(16).toString('hex');
 }
 
-async function validateSession(authHeader: string | undefined) {
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { error: 'unauthorized', message: 'Missing or invalid authorization header' };
-  }
-
-  const sessionId = authHeader.slice(7);
-  const [session] = await db
-    .select()
-    .from(sessions)
-    .where(and(eq(sessions.id, sessionId), gt(sessions.expiresAt, new Date())));
-
-  if (!session) {
-    return { error: 'unauthorized', message: 'Invalid or expired session' };
-  }
-
-  const [user] = await db.select().from(users).where(eq(users.id, session.userId));
-  if (!user) {
-    return { error: 'unauthorized', message: 'User not found' };
-  }
-
-  return { user };
-}
-
 export const projectRoutes = new Elysia({ prefix: '/api/projects' })
   .post(
     '/',
     async ({ body, headers, set }) => {
       const validation = await validateSession(headers['authorization']);
-      if ('error' in validation) {
+      if (isValidationError(validation)) {
         set.status = 401;
         return { error: validation.error, error_description: validation.message };
       }
@@ -186,7 +164,7 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
   )
   .get('/', async ({ headers, set }) => {
     const validation = await validateSession(headers['authorization']);
-    if ('error' in validation) {
+    if (isValidationError(validation)) {
       set.status = 401;
       return { error: validation.error, error_description: validation.message };
     }
@@ -213,7 +191,7 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
   })
   .get('/:id', async ({ params, headers, set }) => {
     const validation = await validateSession(headers['authorization']);
-    if ('error' in validation) {
+    if (isValidationError(validation)) {
       set.status = 401;
       return { error: validation.error, error_description: validation.message };
     }
