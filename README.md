@@ -61,15 +61,15 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed technical decisions.
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun install` | Install dependencies |
-| `bun run build` | Build all packages |
-| `bun run dev` | Start development servers |
-| `bun run typecheck` | Run TypeScript checks |
-| `bun run lint` | Run ESLint |
-| `bun run test` | Run all tests |
-| `bun run format` | Format code with Prettier |
+| Command             | Description               |
+| ------------------- | ------------------------- |
+| `bun install`       | Install dependencies      |
+| `bun run build`     | Build all packages        |
+| `bun run dev`       | Start development servers |
+| `bun run typecheck` | Run TypeScript checks     |
+| `bun run lint`      | Run ESLint                |
+| `bun run test`      | Run all tests             |
+| `bun run format`    | Format code with Prettier |
 
 ## Contributing
 

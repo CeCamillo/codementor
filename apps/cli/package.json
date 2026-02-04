@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@codementor/shared": "workspace:*",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "open": "^10.1.0"
   },
   "devDependencies": {
     "@types/bun": "^1.1.14",
