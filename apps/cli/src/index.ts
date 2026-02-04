@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { Command } from 'commander';
 import { login, logout, whoami } from './auth';
+import { start } from './commands/start';
 
 const program = new Command();
 
@@ -33,9 +34,9 @@ program
 program
   .command('start')
   .description('Start a new learning project')
-  .argument('[project]', 'Project name or URL')
-  .action((project?: string) => {
-    console.log(`Starting project: ${project ?? 'interactive selection'}`);
+  .argument('<description>', 'Project description (e.g., "Build a todo app with React")')
+  .action(async (description: string) => {
+    await start(description);
   });
 
 program
