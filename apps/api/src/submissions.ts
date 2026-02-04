@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
-import { projects, tasks, submissions, reviews } from '@codementor/db/schema';
+import { projects, tasks, submissions, reviews, users } from '@codementor/db/schema';
 import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { generateReview, getConceptById } from '@codementor/ai';
@@ -9,6 +9,61 @@ import { validateSession, isValidationError } from './middleware/auth';
 
 function generateId(): string {
   return randomBytes(16).toString('hex');
+}
+
+/**
+ * Calculate the streak update based on last active date
+ * Returns the new streak value
+ */
+function calculateStreak(lastActiveDate: Date | null, currentStreak: number): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (!lastActiveDate) {
+    return 1; // First activity ever
+  }
+
+  const lastActive = new Date(lastActiveDate);
+  lastActive.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - lastActive.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    // Already active today, maintain streak
+    return currentStreak;
+  } else if (diffDays === 1) {
+    // Active yesterday, increment streak
+    return currentStreak + 1;
+  } else {
+    // Streak broken, start new streak
+    return 1;
+  }
+}
+
+/**
+ * Update user stats (streak and time) after submission
+ */
+async function updateUserStats(userId: string): Promise<void> {
+  const MINUTES_PER_SUBMISSION = 30;
+
+  // Get current user stats
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+
+  if (!user) return;
+
+  const newStreak = calculateStreak(user.lastActiveDate, user.currentStreak);
+  const newLongestStreak = Math.max(newStreak, user.longestStreak);
+
+  await db
+    .update(users)
+    .set({
+      totalMinutesLearned: user.totalMinutesLearned + MINUTES_PER_SUBMISSION,
+      currentStreak: newStreak,
+      longestStreak: newLongestStreak,
+      lastActiveDate: new Date(),
+    })
+    .where(eq(users.id, userId));
 }
 
 export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
@@ -237,6 +292,9 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
           feedback: cf.feedback,
         };
       });
+
+      // Update user stats (streak and time) after successful submission
+      await updateUserStats(user.id);
 
       const response: SubmitResponse = {
         submission: {

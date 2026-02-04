@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
 import { projects, tasks } from '@codementor/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { generateProject, getConceptById } from '@codementor/ai';
 import type { CreateProjectResponse, Concept } from '@codementor/shared';
@@ -26,6 +26,7 @@ function generateId(): string {
 }
 
 export const projectRoutes = new Elysia({ prefix: '/api/projects' })
+  // POST /api/projects - Create new project
   .post(
     '/',
     async ({ body, headers, set }) => {
@@ -162,6 +163,7 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
       }),
     }
   )
+  // GET /api/projects - List all user's projects with progress
   .get('/', async ({ headers, set }) => {
     const validation = await validateSession(headers['authorization']);
     if (isValidationError(validation)) {
@@ -171,24 +173,98 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
 
     const { user } = validation;
 
-    const userProjects = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.userId, user.id))
-      .orderBy(desc(projects.updatedAt));
+    try {
+      // Get all projects for user
+      const userProjects = await db
+        .select({
+          id: projects.id,
+          title: projects.title,
+          description: projects.description,
+          difficulty: projects.difficulty,
+          status: projects.status,
+          currentTaskId: projects.currentTaskId,
+          createdAt: projects.createdAt,
+          updatedAt: projects.updatedAt,
+        })
+        .from(projects)
+        .where(eq(projects.userId, user.id))
+        .orderBy(desc(projects.updatedAt));
 
-    return {
-      projects: userProjects.map((p) => ({
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        difficulty: p.difficulty,
-        status: p.status,
-        createdAt: p.createdAt.toISOString(),
-        updatedAt: p.updatedAt.toISOString(),
-      })),
-    };
+      // Calculate progress for each project
+      const projectsWithProgress = await Promise.all(
+        userProjects.map(async (project) => {
+          const projectTasks = await db
+            .select({
+              id: tasks.id,
+              title: tasks.title,
+              status: tasks.status,
+              order: tasks.order,
+            })
+            .from(tasks)
+            .where(eq(tasks.projectId, project.id))
+            .orderBy(asc(tasks.order));
+
+          const total = projectTasks.length;
+          const completed = projectTasks.filter((t) => t.status === 'completed').length;
+          const inProgress = projectTasks.filter(
+            (t) => t.status === 'in_progress' || t.status === 'available'
+          ).length;
+
+          // Get current task info
+          let currentTask = null;
+          if (project.currentTaskId) {
+            const [task] = await db
+              .select({
+                id: tasks.id,
+                title: tasks.title,
+                order: tasks.order,
+                status: tasks.status,
+              })
+              .from(tasks)
+              .where(eq(tasks.id, project.currentTaskId))
+              .limit(1);
+            currentTask = task ?? null;
+          } else if (inProgress > 0) {
+            // Find first available/in_progress task
+            const firstTask = projectTasks.find(
+              (t) => t.status === 'available' || t.status === 'in_progress'
+            );
+            if (firstTask) {
+              currentTask = firstTask;
+            }
+          }
+
+          return {
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            difficulty: project.difficulty,
+            status: project.status,
+            progress: {
+              completed,
+              total,
+              percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+            },
+            currentTask,
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+          };
+        })
+      );
+
+      return {
+        projects: projectsWithProgress,
+      };
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      set.status = 500;
+      return {
+        error: 'fetch_failed',
+        error_description: 'Failed to fetch projects. Please try again.',
+      };
+    }
   })
+  // GET /api/projects/:id - Get single project with tasks
   .get('/:id', async ({ params, headers, set }) => {
     const validation = await validateSession(headers['authorization']);
     if (isValidationError(validation)) {
@@ -238,4 +314,124 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
         completedAt: t.completedAt?.toISOString(),
       })),
     };
-  });
+  })
+  // POST /api/projects/:id/switch - Switch active project
+  .post(
+    '/:id/switch',
+    async ({ params, headers, set }) => {
+      const validation = await validateSession(headers['authorization']);
+      if (isValidationError(validation)) {
+        set.status = 401;
+        return { error: validation.error, error_description: validation.message };
+      }
+
+      const { user } = validation;
+      const { id } = params;
+
+      try {
+        // Check if project exists and belongs to user
+        const [project] = await db
+          .select({
+            id: projects.id,
+            status: projects.status,
+            userId: projects.userId,
+          })
+          .from(projects)
+          .where(eq(projects.id, id))
+          .limit(1);
+
+        if (!project) {
+          set.status = 404;
+          return {
+            error: 'project_not_found',
+            error_description: 'Project not found.',
+          };
+        }
+
+        if (project.userId !== user.id) {
+          set.status = 403;
+          return {
+            error: 'forbidden',
+            error_description: 'You do not have access to this project.',
+          };
+        }
+
+        if (project.status === 'completed') {
+          set.status = 400;
+          return {
+            error: 'project_completed',
+            error_description: 'Cannot switch to a completed project.',
+          };
+        }
+
+        if (project.status === 'abandoned') {
+          set.status = 400;
+          return {
+            error: 'project_abandoned',
+            error_description: 'Cannot switch to an abandoned project.',
+          };
+        }
+
+        // If project is not_started, set it to in_progress
+        if (project.status === 'not_started') {
+          // Find first available task to set as current
+          const [firstTask] = await db
+            .select({ id: tasks.id })
+            .from(tasks)
+            .where(
+              and(
+                eq(tasks.projectId, id),
+                or(eq(tasks.status, 'available'), eq(tasks.status, 'locked'))
+              )
+            )
+            .orderBy(asc(tasks.order))
+            .limit(1);
+
+          if (firstTask) {
+            // Unlock the first task if it's locked
+            await db.update(tasks).set({ status: 'available' }).where(eq(tasks.id, firstTask.id));
+
+            // Update project status and current task
+            await db
+              .update(projects)
+              .set({
+                status: 'in_progress',
+                currentTaskId: firstTask.id,
+                updatedAt: new Date(),
+              })
+              .where(eq(projects.id, id));
+          } else {
+            // No tasks found, just update status
+            await db
+              .update(projects)
+              .set({
+                status: 'in_progress',
+                updatedAt: new Date(),
+              })
+              .where(eq(projects.id, id));
+          }
+        } else {
+          // Project is already in_progress, just update timestamp
+          await db.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, id));
+        }
+
+        return {
+          success: true,
+          message: 'Project switched successfully.',
+          projectId: id,
+        };
+      } catch (error) {
+        console.error('Failed to switch project:', error);
+        set.status = 500;
+        return {
+          error: 'switch_failed',
+          error_description: 'Failed to switch project. Please try again.',
+        };
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+    }
+  );

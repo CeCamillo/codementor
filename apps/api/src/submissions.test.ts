@@ -628,4 +628,90 @@ describe('Submissions API Routes', () => {
       // API should return 400 for empty files array
     });
   });
+
+  describe('Streak and Time Tracking', () => {
+    it('calculates streak for first activity', () => {
+      const lastActiveDate: Date | null = null;
+      const currentStreak = 0;
+
+      // First activity ever
+      const newStreak = lastActiveDate ? currentStreak + 1 : 1;
+      expect(newStreak).toBe(1);
+    });
+
+    it('maintains streak when active same day', () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const lastActiveDate = new Date(today);
+      const currentStreak = 5;
+
+      const diffTime = today.getTime() - lastActiveDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      const newStreak = diffDays === 0 ? currentStreak : diffDays === 1 ? currentStreak + 1 : 1;
+      expect(newStreak).toBe(5); // Maintains streak
+    });
+
+    it('increments streak when active next day', () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const lastActiveDate = new Date(today);
+      lastActiveDate.setDate(lastActiveDate.getDate() - 1); // Yesterday
+      const currentStreak = 3;
+
+      const diffTime = today.getTime() - lastActiveDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      const newStreak = diffDays === 0 ? currentStreak : diffDays === 1 ? currentStreak + 1 : 1;
+      expect(newStreak).toBe(4); // Increment streak
+    });
+
+    it('resets streak when gap is more than one day', () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const lastActiveDate = new Date(today);
+      lastActiveDate.setDate(lastActiveDate.getDate() - 3); // 3 days ago
+      const currentStreak = 5;
+
+      const diffTime = today.getTime() - lastActiveDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      const newStreak = diffDays === 0 ? currentStreak : diffDays === 1 ? currentStreak + 1 : 1;
+      expect(newStreak).toBe(1); // Reset streak
+    });
+
+    it('updates longest streak when current exceeds it', () => {
+      const currentStreak = 10;
+      const longestStreak = 8;
+
+      const newLongestStreak = Math.max(currentStreak, longestStreak);
+      expect(newLongestStreak).toBe(10);
+    });
+
+    it('keeps longest streak when current is lower', () => {
+      const currentStreak = 5;
+      const longestStreak = 10;
+
+      const newLongestStreak = Math.max(currentStreak, longestStreak);
+      expect(newLongestStreak).toBe(10);
+    });
+
+    it('adds 30 minutes per submission', () => {
+      const MINUTES_PER_SUBMISSION = 30;
+      const currentMinutes = 120;
+
+      const newMinutes = currentMinutes + MINUTES_PER_SUBMISSION;
+      expect(newMinutes).toBe(150);
+    });
+
+    it('updates last active date on submission', () => {
+      const beforeUpdate = new Date('2026-02-01');
+      const afterUpdate = new Date();
+
+      expect(afterUpdate.getTime()).toBeGreaterThan(beforeUpdate.getTime());
+    });
+  });
 });

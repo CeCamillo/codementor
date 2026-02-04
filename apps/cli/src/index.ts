@@ -4,6 +4,8 @@ import { login, logout, whoami } from './auth';
 import { start } from './commands/start';
 import { next } from './commands/next';
 import { submit } from './commands/submit';
+import { progress } from './commands/progress';
+import { projects } from './commands/projects';
 
 const program = new Command();
 
@@ -66,8 +68,20 @@ program
 program
   .command('progress')
   .description('View learning progress')
-  .action(() => {
-    console.log('Progress command - not yet implemented');
+  .action(async () => {
+    await progress();
+  });
+
+program
+  .command('projects')
+  .description('Manage your projects')
+  .argument('[subcommand]', 'Subcommand: list, switch')
+  .argument('[id]', 'Project ID (for switch command)')
+  .action(async (subcommand?: string, id?: string) => {
+    const args: string[] = [];
+    if (subcommand) args.push(subcommand);
+    if (id) args.push(id);
+    await projects(args);
   });
 
 program.parse();
