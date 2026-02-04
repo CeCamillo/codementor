@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import { Command } from 'commander';
 import { login, logout, whoami } from './auth';
+import { start } from './commands/start';
+import { next } from './commands/next';
+import { submit } from './commands/submit';
 
 const program = new Command();
 
@@ -33,23 +36,24 @@ program
 program
   .command('start')
   .description('Start a new learning project')
-  .argument('[project]', 'Project name or URL')
-  .action((project?: string) => {
-    console.log(`Starting project: ${project ?? 'interactive selection'}`);
+  .argument('<description>', 'Project description (e.g., "Build a todo app with React")')
+  .action(async (description: string) => {
+    await start(description);
   });
 
 program
-  .command('task')
+  .command('next')
+  .alias('task')
   .description('View current task')
-  .action(() => {
-    console.log('Current task - not yet implemented');
+  .action(async () => {
+    await next();
   });
 
 program
   .command('submit')
   .description('Submit code for review')
-  .action(() => {
-    console.log('Submit command - not yet implemented');
+  .action(async () => {
+    await submit();
   });
 
 program
