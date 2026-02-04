@@ -245,9 +245,16 @@ export async function projects(args: string[]): Promise<void> {
 
   try {
     switch (subcommand) {
-      case 'switch':
-        await switchProject(args[1]);
+      case 'switch': {
+        const projectId = args[1];
+        if (!projectId) {
+          console.error('\x1b[31mError:\x1b[0m Project ID is required.');
+          console.error('Usage: codementor projects switch <id>');
+          process.exit(1);
+        }
+        await switchProject(projectId);
         break;
+      }
       case 'list':
       case undefined:
         await listProjects();

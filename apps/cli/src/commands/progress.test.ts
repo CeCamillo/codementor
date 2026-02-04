@@ -48,7 +48,7 @@ describe('Progress Command', () => {
       expect(response.user.totalMinutesLearned).toBe(270);
       expect(response.user.currentStreak).toBe(3);
       expect(response.activeProject?.progress.percentage).toBe(60);
-      expect(response.masteredConcepts[0].masteryLevel).toBeGreaterThanOrEqual(80);
+      expect(response.masteredConcepts[0]?.masteryLevel).toBeGreaterThanOrEqual(80);
     });
 
     it('validates time formatting for different durations', () => {
@@ -136,7 +136,7 @@ describe('Progress Command', () => {
           if (!acc[concept.category]) {
             acc[concept.category] = [];
           }
-          acc[concept.category].push(concept);
+          acc[concept.category]!.push(concept);
           return acc;
         },
         {} as Record<string, typeof concepts>

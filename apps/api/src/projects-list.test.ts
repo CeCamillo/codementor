@@ -9,7 +9,7 @@ describe('Projects List & Switch API Routes', () => {
       const response = await fetch(`${API_BASE}/api/projects`);
       expect(response.status).toBe(401);
 
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBeDefined();
     });
 
@@ -40,10 +40,10 @@ describe('Projects List & Switch API Routes', () => {
       };
 
       expect(mockResponse.projects).toBeArray();
-      expect(mockResponse.projects[0]).toHaveProperty('id');
-      expect(mockResponse.projects[0]).toHaveProperty('title');
-      expect(mockResponse.projects[0]).toHaveProperty('progress');
-      expect(mockResponse.projects[0].progress).toHaveProperty('percentage');
+      expect(mockResponse.projects[0]!).toHaveProperty('id');
+      expect(mockResponse.projects[0]!).toHaveProperty('title');
+      expect(mockResponse.projects[0]!).toHaveProperty('progress');
+      expect(mockResponse.projects[0]!.progress).toHaveProperty('percentage');
     });
 
     it('validates project with progress', () => {
@@ -102,9 +102,9 @@ describe('Projects List & Switch API Routes', () => {
         (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
 
-      expect(sorted[0].id).toBe('2');
-      expect(sorted[1].id).toBe('3');
-      expect(sorted[2].id).toBe('1');
+      expect(sorted[0]!.id).toBe('2');
+      expect(sorted[1]!.id).toBe('3');
+      expect(sorted[2]!.id).toBe('1');
     });
   });
 
@@ -178,7 +178,7 @@ describe('Projects List & Switch API Routes', () => {
         { id: 'task-2', order: 2, status: 'locked' },
       ];
 
-      const firstTask = projectTasks.sort((a, b) => a.order - b.order)[0];
+      const firstTask = projectTasks.sort((a, b) => a.order - b.order)[0]!;
       expect(firstTask.order).toBe(1);
 
       // First task should be unlocked

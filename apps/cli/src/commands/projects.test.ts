@@ -30,9 +30,9 @@ describe('Projects Command', () => {
       };
 
       expect(response.projects).toBeArray();
-      expect(response.projects[0].id).toBe('proj-1');
-      expect(response.projects[0].progress.percentage).toBe(60);
-      expect(response.projects[0].currentTask).toBeDefined();
+      expect(response.projects[0]!.id).toBe('proj-1');
+      expect(response.projects[0]!.progress.percentage).toBe(60);
+      expect(response.projects[0]!.currentTask).toBeDefined();
     });
 
     it('validates SwitchProjectResponse structure', () => {

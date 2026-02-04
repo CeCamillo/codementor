@@ -160,7 +160,7 @@ export async function progress(): Promise<void> {
           if (!acc[concept.category]) {
             acc[concept.category] = [];
           }
-          acc[concept.category].push(concept);
+          acc[concept.category]!.push(concept);
           return acc;
         },
         {} as Record<string, typeof data.masteredConcepts>

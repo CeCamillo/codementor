@@ -9,7 +9,7 @@ describe('Progress API Routes', () => {
       const response = await fetch(`${API_BASE}/api/progress`);
       expect(response.status).toBe(401);
 
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBeDefined();
     });
 
