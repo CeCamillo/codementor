@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { login, logout, whoami } from './auth';
 import { start } from './commands/start';
 import { next } from './commands/next';
+import { submit } from './commands/submit';
 
 const program = new Command();
 
@@ -51,8 +52,8 @@ program
 program
   .command('submit')
   .description('Submit code for review')
-  .action(() => {
-    console.log('Submit command - not yet implemented');
+  .action(async () => {
+    await submit();
   });
 
 program

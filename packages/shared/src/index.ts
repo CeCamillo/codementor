@@ -5,6 +5,7 @@ export * from './types/concept';
 export * from './types/review';
 export * from './types/project-generation';
 export * from './types/task-display';
+export * from './types/submission';
 
 // Utils
 export * from './utils/result';
