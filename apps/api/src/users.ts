@@ -2,11 +2,19 @@ import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
 import { userConcepts } from '@codementor/db/schema';
 import { eq, desc, and, lte } from 'drizzle-orm';
-import { getConceptById, isDueForReview, calculateReviewPriority } from '@codementor/ai';
+import {
+  getConceptById,
+  getWebFundamentalsConcepts,
+  isDueForReview,
+  calculateReviewPriority,
+} from '@codementor/ai';
 import type {
   UserConceptsResponse,
   UserConceptItem,
   ConceptsDueResponse,
+  ConceptGraphResponse,
+  ConceptGraphNode,
+  ConceptGraphEdge,
 } from '@codementor/shared';
 import { validateSession, isValidationError } from './middleware/auth';
 
@@ -125,6 +133,98 @@ export const userConceptRoutes = new Elysia({ prefix: '/api/users' })
     const response: ConceptsDueResponse = {
       concepts,
       total: concepts.length,
+    };
+
+    return response;
+  })
+
+  // GET /api/users/me/concepts/graph - Get concept graph for visualization
+  .get('/me/concepts/graph', async ({ headers, set }) => {
+    const validation = await validateSession(headers['authorization']);
+    if (isValidationError(validation)) {
+      set.status = 401;
+      return { error: validation.error, error_description: validation.message };
+    }
+
+    const { user } = validation;
+
+    // Get all concepts from the curriculum
+    const allConcepts = getWebFundamentalsConcepts();
+
+    // Get user's mastery data
+    const userConceptRecords = await db
+      .select()
+      .from(userConcepts)
+      .where(eq(userConcepts.userId, user.id));
+
+    // Create a map of user progress by concept ID
+    const userProgressMap = new Map(userConceptRecords.map((r) => [r.conceptId, r]));
+
+    // Build nodes
+    const nodes: ConceptGraphNode[] = allConcepts.map((concept) => {
+      const progress = userProgressMap.get(concept.id);
+
+      let status: 'not_started' | 'in_progress' | 'mastered';
+      let masteryLevel: number | null = null;
+      let isDue = false;
+      let isStruggling = false;
+      let lastPracticedAt: string | null = null;
+
+      if (progress) {
+        masteryLevel = progress.masteryLevel;
+        if (progress.masteryLevel >= 80) {
+          status = 'mastered';
+        } else if (progress.masteryLevel > 0) {
+          status = 'in_progress';
+        } else {
+          status = 'not_started';
+        }
+        isDue = isDueForReview(progress.nextReviewAt);
+        isStruggling = progress.consecutiveFailures >= STRUGGLING_THRESHOLD;
+        lastPracticedAt = progress.lastPracticedAt?.toISOString() ?? null;
+      } else {
+        status = 'not_started';
+      }
+
+      return {
+        id: concept.id,
+        name: concept.name,
+        category: concept.category,
+        tier: concept.tier,
+        masteryLevel,
+        status,
+        isDueForReview: isDue,
+        isStruggling,
+        lastPracticedAt,
+      };
+    });
+
+    // Build edges from prerequisites
+    const edges: ConceptGraphEdge[] = [];
+    for (const concept of allConcepts) {
+      for (const prereqId of concept.prerequisites) {
+        edges.push({
+          id: `${prereqId}-${concept.id}`,
+          source: prereqId,
+          target: concept.id,
+        });
+      }
+    }
+
+    // Calculate summary
+    const mastered = nodes.filter((n) => n.status === 'mastered').length;
+    const inProgress = nodes.filter((n) => n.status === 'in_progress').length;
+    const notStarted = nodes.filter((n) => n.status === 'not_started').length;
+
+    const response: ConceptGraphResponse = {
+      nodes,
+      edges,
+      summary: {
+        total: nodes.length,
+        mastered,
+        inProgress,
+        notStarted,
+      },
     };
 
     return response;
