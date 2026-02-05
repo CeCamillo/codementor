@@ -46,26 +46,30 @@ export interface SubmitResponse {
       }>
     | undefined;
   // New fields for enhanced review
-  executionResults?: {
-    passed: number;
-    failed: number;
-    total: number;
-    tests: Array<{
-      name: string;
-      passed: boolean;
-      error?: string;
-    }>;
-    sandboxAvailable: boolean;
-  };
-  antiPatterns?: Array<{
-    type: string;
-    category: string;
-    location: { file: string; line: number };
-    message: string;
-    suggestion: string;
-    severity: 'warning' | 'error';
-  }>;
-  reasoningQuestions?: string[];
+  executionResults?:
+    | {
+        passed: number;
+        failed: number;
+        total: number;
+        tests: Array<{
+          name: string;
+          passed: boolean;
+          error?: string | undefined;
+        }>;
+        sandboxAvailable: boolean;
+      }
+    | undefined;
+  antiPatterns?:
+    | Array<{
+        type: string;
+        category: string;
+        location: { file: string; line: number };
+        message: string;
+        suggestion: string;
+        severity: 'warning' | 'error';
+      }>
+    | undefined;
+  reasoningQuestions?: string[] | undefined;
 }
 
 export interface ReflectionRespondRequest {
