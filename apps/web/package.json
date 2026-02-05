@@ -12,6 +12,8 @@
     "test": "echo 'No tests yet'"
   },
   "dependencies": {
+    "@codementor/db": "workspace:*",
+    "drizzle-orm": "^0.38.3",
     "@codementor/shared": "workspace:*",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.4",
