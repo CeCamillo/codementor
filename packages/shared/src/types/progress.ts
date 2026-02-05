@@ -75,3 +75,23 @@ export function isNoActiveProjectResponse(
 ): response is NoActiveProjectResponse {
   return 'hasActiveProject' in response && response.hasActiveProject === false;
 }
+
+export interface UserConceptItem {
+  conceptId: string;
+  name: string;
+  category: string;
+  masteryLevel: number;
+  practiceCount: number;
+  lastPracticedAt: string | null;
+  status: 'not_started' | 'in_progress' | 'mastered';
+}
+
+export interface UserConceptsResponse {
+  concepts: UserConceptItem[];
+  summary: {
+    total: number;
+    mastered: number;
+    inProgress: number;
+    notStarted: number;
+  };
+}

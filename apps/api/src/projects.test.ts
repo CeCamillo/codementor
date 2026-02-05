@@ -525,4 +525,115 @@ describe('Project API Routes', () => {
       expect(validStatuses).toContain(testStatus);
     });
   });
+
+  describe('DELETE /api/projects/:id', () => {
+    it('returns 401 without authorization header', async () => {
+      const app = new Elysia().delete('/api/projects/:id', ({ headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return {
+            error: 'unauthorized',
+            error_description: 'Missing or invalid authorization header',
+          };
+        }
+        return { success: true };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/projects/project-123', {
+          method: 'DELETE',
+        })
+      );
+
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 404 for non-existent project', async () => {
+      const app = new Elysia().delete('/api/projects/:id', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'non-existent') {
+          set.status = 404;
+          return { error: 'not_found', error_description: 'Project not found' };
+        }
+
+        return { success: true };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/projects/non-existent', {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(404);
+
+      const data = (await response.json()) as ErrorResponse;
+      expect(data.error).toBe('not_found');
+    });
+
+    it('returns 400 for already archived project', async () => {
+      const app = new Elysia().delete('/api/projects/:id', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'already-archived') {
+          set.status = 400;
+          return { error: 'already_archived', error_description: 'Project is already archived' };
+        }
+
+        return { success: true };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/projects/already-archived', {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(400);
+
+      const data = (await response.json()) as ErrorResponse;
+      expect(data.error).toBe('already_archived');
+    });
+
+    it('archives project successfully', async () => {
+      const app = new Elysia().delete('/api/projects/:id', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'project-123') {
+          return { success: true };
+        }
+
+        set.status = 404;
+        return { error: 'not_found' };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/projects/project-123', {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(200);
+
+      const data = (await response.json()) as { success: boolean };
+      expect(data.success).toBe(true);
+    });
+  });
 });

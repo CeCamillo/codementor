@@ -353,4 +353,35 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
     };
 
     return response;
+  })
+  .delete('/:id', async ({ params, headers, set }) => {
+    const validation = await validateSession(headers['authorization']);
+    if (isValidationError(validation)) {
+      set.status = 401;
+      return { error: validation.error, error_description: validation.message };
+    }
+
+    const { user } = validation;
+
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, params.id), eq(projects.userId, user.id)));
+
+    if (!project) {
+      set.status = 404;
+      return { error: 'not_found', error_description: 'Project not found' };
+    }
+
+    if (project.status === 'abandoned') {
+      set.status = 400;
+      return { error: 'already_archived', error_description: 'Project is already archived' };
+    }
+
+    await db
+      .update(projects)
+      .set({ status: 'abandoned', updatedAt: new Date() })
+      .where(eq(projects.id, params.id));
+
+    return { success: true };
   });

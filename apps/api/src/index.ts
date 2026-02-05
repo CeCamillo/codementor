@@ -5,6 +5,7 @@ import { projectRoutes } from './projects';
 import { taskRoutes } from './tasks';
 import { submissionRoutes } from './submissions';
 import { progressRoutes } from './progress';
+import { userConceptRoutes } from './users';
 
 const app = new Elysia()
   .use(
@@ -26,6 +27,7 @@ const app = new Elysia()
   .use(taskRoutes)
   .use(submissionRoutes)
   .use(progressRoutes)
+  .use(userConceptRoutes)
   .listen(3000);
 
 console.log(`CodeMentor API running at ${app.server?.hostname}:${app.server?.port}`);
