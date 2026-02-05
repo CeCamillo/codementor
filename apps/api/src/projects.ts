@@ -1,14 +1,15 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
-import { projects, tasks } from '@codementor/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { projects, tasks, userConcepts } from '@codementor/db/schema';
+import { eq, and, desc, lte } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { generateProject, getConceptById } from '@codementor/ai';
+import { generateProject, getConceptById, calculateReviewPriority } from '@codementor/ai';
 import type {
   CreateProjectResponse,
   Concept,
   ProjectsListResponse,
   ProjectSwitchResponse,
+  ConceptForReview,
 } from '@codementor/shared';
 import { validateSession, isValidationError } from './middleware/auth';
 
@@ -44,9 +45,32 @@ export const projectRoutes = new Elysia({ prefix: '/api/projects' })
       const { description, difficulty } = body;
 
       try {
+        // Fetch concepts due for review
+        const now = new Date();
+        const dueRecords = await db
+          .select()
+          .from(userConcepts)
+          .where(and(eq(userConcepts.userId, user.id), lte(userConcepts.nextReviewAt, now)));
+
+        // Map to ConceptForReview with priority
+        const conceptsForReview: ConceptForReview[] = dueRecords
+          .map((record) => {
+            const concept = getConceptById(record.conceptId);
+            const priority = calculateReviewPriority(record.nextReviewAt, record.masteryLevel);
+            return {
+              conceptId: record.conceptId,
+              conceptName: concept?.name ?? record.conceptId,
+              masteryLevel: record.masteryLevel,
+              priority,
+            };
+          })
+          .sort((a, b) => b.priority - a.priority)
+          .slice(0, 5); // Limit to top 5 priority concepts
+
         const generated = await generateProject({
           description,
           ...(difficulty && { difficulty }),
+          ...(conceptsForReview.length > 0 && { conceptsForReview }),
         });
 
         const projectId = generateId();

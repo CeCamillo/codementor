@@ -39,6 +39,7 @@ export const userConcepts = pgTable(
       .references(() => concepts.id, { onDelete: 'cascade' }),
     masteryLevel: integer('mastery_level').notNull().default(0), // 0-100
     practiceCount: integer('practice_count').notNull().default(0),
+    consecutiveFailures: integer('consecutive_failures').notNull().default(0), // For struggling detection
     lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }),
     nextReviewAt: timestamp('next_review_at', { withTimezone: true }), // Spaced repetition
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
