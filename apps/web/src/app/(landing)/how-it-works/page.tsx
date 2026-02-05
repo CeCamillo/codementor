@@ -17,18 +17,18 @@ import { Badge } from '@/components/ui/badge';
 import { WaitlistForm } from '@/components/landing/waitlist-form';
 
 export const metadata: Metadata = {
-  title: 'How It Works — CodeMentor',
+  title: 'Como Funciona — CodeMentor',
   description:
-    'Install the CLI, start a project, build with hints, submit for AI review, and track your mastery. Learn web development in 5 steps.',
+    'Instale o CLI, comece um projeto, construa com dicas, submeta para revisão por IA e acompanhe seu domínio. Aprenda desenvolvimento web em 5 passos.',
 };
 
 const steps = [
   {
     number: '01',
     icon: Download,
-    title: 'Install the CLI',
+    title: 'Instale o CLI',
     description:
-      'One command to install. Sign in with GitHub or Google via OAuth device flow — no passwords to remember.',
+      'Um comando para instalar. Faça login com GitHub ou Google via OAuth device flow — sem senhas para lembrar.',
     terminal: (
       <div className="space-y-2 font-mono text-[13px] text-white/70">
         <p>
@@ -39,32 +39,32 @@ const steps = [
           <span className="text-green-400">$</span>{' '}
           <span className="text-white">codementor login</span>
         </p>
-        <p className="text-blue-400">Opening browser for GitHub authentication...</p>
-        <p className="text-green-400">Logged in as sarah.dev</p>
+        <p className="text-blue-400">Abrindo navegador para autenticação com GitHub...</p>
+        <p className="text-green-400">Logado como sarah.dev</p>
       </div>
     ),
   },
   {
     number: '02',
     icon: Lightbulb,
-    title: 'Start a project',
+    title: 'Comece um projeto',
     description:
-      'Describe what you want to build. The AI generates a structured project with tasks matched to your current skill level.',
+      'Descreva o que você quer construir. A IA gera um projeto estruturado com tarefas adaptadas ao seu nível atual.',
     terminal: (
       <div className="space-y-2 font-mono text-[13px] text-white/70">
         <p>
           <span className="text-green-400">$</span>{' '}
-          <span className="text-white">codementor start &quot;blog with markdown&quot;</span>
+          <span className="text-white">codementor start &quot;blog com markdown&quot;</span>
         </p>
         <p>
-          Project: <span className="text-white">Markdown Blog Engine</span>
+          Projeto: <span className="text-white">Motor de Blog Markdown</span>
         </p>
         <p>
-          Difficulty: <span className="text-yellow-400">Intermediate</span>
+          Dificuldade: <span className="text-yellow-400">Intermediário</span>
         </p>
-        <p className="text-white/40">4 tasks generated. Starting with Task 1.</p>
+        <p className="text-white/40">4 tarefas geradas. Começando pela Tarefa 1.</p>
         <p className="mt-1">
-          <span className="text-green-400">Task 1:</span> Parse markdown files into HTML
+          <span className="text-green-400">Tarefa 1:</span> Converter arquivos markdown em HTML
         </p>
       </div>
     ),
@@ -72,9 +72,9 @@ const steps = [
   {
     number: '03',
     icon: Code2,
-    title: 'Build with guidance',
+    title: 'Construa com orientação',
     description:
-      'Work through tasks at your own pace. When you get stuck, ask for hints — they start vague and get more specific.',
+      'Trabalhe nas tarefas no seu ritmo. Quando travar, peça dicas — elas começam vagas e vão ficando mais específicas.',
     terminal: (
       <div className="space-y-2 font-mono text-[13px] text-white/70">
         <p>
@@ -82,10 +82,12 @@ const steps = [
           <span className="text-white">codementor hint</span>
         </p>
         <div className="rounded border border-yellow-500/10 bg-yellow-500/5 px-3 py-2">
-          <p className="text-yellow-400/90">Hint (Level 2/4):</p>
-          <p>You&apos;ll need to read the file system. Node.js has a built-in module for that.</p>
+          <p className="text-yellow-400/90">Dica (Nível 2/4):</p>
+          <p>
+            Você vai precisar ler o sistema de arquivos. O Node.js tem um módulo nativo para isso.
+          </p>
           <p className="text-white/40">
-            What&apos;s the difference between sync and async file reading?
+            Qual é a diferença entre leitura síncrona e assíncrona de arquivos?
           </p>
         </div>
       </div>
@@ -94,24 +96,24 @@ const steps = [
   {
     number: '04',
     icon: Send,
-    title: 'Submit for review',
+    title: 'Submeta para revisão',
     description:
-      'Submit your code and get a thorough AI review. It checks correctness, runs tests, detects anti-patterns, and asks you to explain your reasoning.',
+      'Submeta seu código e receba uma revisão completa por IA. Ela verifica corretude, executa testes, detecta anti-patterns e pede que você explique seu raciocínio.',
     terminal: (
       <div className="space-y-2 font-mono text-[13px] text-white/70">
         <p>
           <span className="text-green-400">$</span>{' '}
           <span className="text-white">codementor submit</span>
         </p>
-        <p className="text-blue-400">Running tests... 3/3 passed</p>
-        <p className="text-green-400">Task 1 complete!</p>
+        <p className="text-blue-400">Executando testes... 3/3 aprovados</p>
+        <p className="text-green-400">Tarefa 1 concluída!</p>
         <p>
-          <span className="text-white/40">Concepts demonstrated:</span>{' '}
-          <span className="text-green-400">file I/O</span>,{' '}
-          <span className="text-green-400">string parsing</span>
+          <span className="text-white/40">Conceitos demonstrados:</span>{' '}
+          <span className="text-green-400">I/O de arquivos</span>,{' '}
+          <span className="text-green-400">parsing de strings</span>
         </p>
         <p className="text-white/40">
-          Question: Why did you choose readFileSync over readFile here?
+          Pergunta: Por que você escolheu readFileSync ao invés de readFile aqui?
         </p>
       </div>
     ),
@@ -119,9 +121,9 @@ const steps = [
   {
     number: '05',
     icon: TrendingUp,
-    title: 'Track your mastery',
+    title: 'Acompanhe seu domínio',
     description:
-      'Watch your concept map grow. The spaced repetition engine schedules reviews at optimal intervals so knowledge sticks long-term.',
+      'Veja seu mapa de conceitos crescer. O motor de repetição espaçada agenda revisões em intervalos ideais para que o conhecimento se fixe a longo prazo.',
     terminal: (
       <div className="space-y-2 font-mono text-[13px] text-white/70">
         <p>
@@ -129,16 +131,16 @@ const steps = [
           <span className="text-white">codementor progress</span>
         </p>
         <p>
-          Projects: <span className="text-white">3 completed</span>,{' '}
-          <span className="text-blue-400">1 in progress</span>
+          Projetos: <span className="text-white">3 concluídos</span>,{' '}
+          <span className="text-blue-400">1 em progresso</span>
         </p>
         <p>
-          Streak: <span className="text-orange-400">12 days</span>
+          Sequência: <span className="text-orange-400">12 dias</span>
         </p>
         <p>
-          Concepts: <span className="text-green-400">15 mastered</span>,{' '}
-          <span className="text-blue-400">8 in progress</span>,{' '}
-          <span className="text-orange-400">3 due for review</span>
+          Conceitos: <span className="text-green-400">15 dominados</span>,{' '}
+          <span className="text-blue-400">8 em progresso</span>,{' '}
+          <span className="text-orange-400">3 para revisão</span>
         </p>
       </div>
     ),
@@ -148,31 +150,35 @@ const steps = [
 const personas = [
   {
     icon: Repeat,
-    title: 'Career Changers',
+    title: 'Transição de Carreira',
     description:
-      "You're switching to tech from another field. You need structured learning that builds real skills, not just familiarity with syntax.",
+      'Você está mudando para tecnologia vindo de outra área. Precisa de um aprendizado estruturado que construa habilidades reais, não apenas familiaridade com sintaxe.',
     highlights: [
-      'Guided project progression',
-      'No prerequisites assumed',
-      'Build a real portfolio',
+      'Progressão guiada de projetos',
+      'Sem pré-requisitos necessários',
+      'Construa um portfólio real',
     ],
   },
   {
     icon: BookOpen,
-    title: 'Self-Taught Developers',
+    title: 'Desenvolvedores Autodidatas',
     description:
-      'You can follow tutorials, but you struggle when the training wheels come off. CodeMentor fills the gaps in your understanding.',
-    highlights: ['Identify knowledge gaps', 'Socratic questioning', 'Move beyond tutorial hell'],
+      'Você consegue seguir tutoriais, mas trava quando as rodinhas saem. O CodeMentor preenche as lacunas no seu entendimento.',
+    highlights: [
+      'Identifique lacunas de conhecimento',
+      'Questionamento socrático',
+      'Saia do ciclo de tutoriais',
+    ],
   },
   {
     icon: Users,
-    title: 'Bootcamp Students',
+    title: 'Alunos de Bootcamp',
     description:
-      "Your bootcamp moves fast and you need extra practice. CodeMentor reinforces what you're learning with spaced repetition.",
+      'Seu bootcamp vai rápido e você precisa de prática extra. O CodeMentor reforça o que você está aprendendo com repetição espaçada.',
     highlights: [
-      'Reinforce bootcamp concepts',
-      'Spaced repetition scheduling',
-      'Track mastery over time',
+      'Reforce conceitos do bootcamp',
+      'Agendamento de repetição espaçada',
+      'Acompanhe o domínio ao longo do tempo',
     ],
   },
 ];
@@ -185,14 +191,14 @@ export default function HowItWorksPage() {
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="secondary" className="mb-5 font-mono text-xs">
             <Terminal className="mr-1.5 h-3 w-3" />
-            Getting started
+            Primeiros passos
           </Badge>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.2]">
-            From zero to understanding in five steps
+            Do zero ao entendimento em cinco passos
           </h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            CodeMentor lives in your terminal. Install, describe a project, and start learning — the
-            AI handles the rest.
+            O CodeMentor vive no seu terminal. Instale, descreva um projeto e comece a aprender — a
+            IA cuida do resto.
           </p>
         </div>
       </section>
@@ -245,11 +251,11 @@ export default function HowItWorksPage() {
       <section className="border-y bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="font-mono text-sm text-muted-foreground">Who it&apos;s for</p>
+            <p className="font-mono text-sm text-muted-foreground">Para quem é</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              Built for people who want to actually learn
+              Feito para quem quer realmente aprender
             </h2>
-            <p className="mt-3 text-muted-foreground">Not just write code — understand it.</p>
+            <p className="mt-3 text-muted-foreground">Não apenas escrever código — entendê-lo.</p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {personas.map((persona) => (
@@ -279,29 +285,31 @@ export default function HowItWorksPage() {
       <section className="mx-auto max-w-3xl px-4 py-20 sm:py-24">
         <div className="text-center">
           <p className="font-mono text-sm text-muted-foreground">FAQ</p>
-          <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">Common questions</h2>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+            Perguntas frequentes
+          </h2>
         </div>
         <div className="mt-12 space-y-6">
           {[
             {
-              q: 'Do I need any programming experience?',
-              a: "Some basics help. If you've completed an intro course or tutorial series, you're ready. CodeMentor starts from beginner and adapts to your level.",
+              q: 'Preciso de experiência em programação?',
+              a: 'Um pouco de base ajuda. Se você completou um curso introdutório ou uma série de tutoriais, está pronto. O CodeMentor começa do iniciante e se adapta ao seu nível.',
             },
             {
-              q: 'Why CLI and not a web app?',
-              a: 'Learning should happen where you code. Switching between a browser and your editor breaks flow. The CLI keeps you in the terminal alongside your real tools.',
+              q: 'Por que CLI e não um app web?',
+              a: 'O aprendizado deve acontecer onde você programa. Alternar entre navegador e editor quebra o fluxo. O CLI te mantém no terminal junto com suas ferramentas reais.',
             },
             {
-              q: 'How is this different from ChatGPT?',
-              a: "ChatGPT gives you code. CodeMentor refuses to. It asks questions, gives hints, and reviews your work — but you have to do the thinking. That's how real learning happens.",
+              q: 'Como isso é diferente do ChatGPT?',
+              a: 'O ChatGPT te dá código. O CodeMentor se recusa a dar. Ele faz perguntas, dá dicas e revisa seu trabalho — mas você tem que pensar. É assim que o aprendizado real acontece.',
             },
             {
-              q: 'What languages and topics does it cover?',
-              a: 'Currently focused on web development fundamentals: HTML, CSS, JavaScript, TypeScript, and common frameworks. The concept graph covers 50+ topics.',
+              q: 'Quais linguagens e tópicos são cobertos?',
+              a: 'Atualmente focado em fundamentos de desenvolvimento web: HTML, CSS, JavaScript, TypeScript e frameworks populares. O grafo de conceitos cobre mais de 50 tópicos.',
             },
             {
-              q: 'Is my code stored or shared?',
-              a: 'Your code is sent to the AI for review but never stored permanently or shared. We retain learning progress data to power spaced repetition.',
+              q: 'Meu código é armazenado ou compartilhado?',
+              a: 'Seu código é enviado à IA para revisão mas nunca é armazenado permanentemente ou compartilhado. Retemos apenas dados de progresso de aprendizado para alimentar a repetição espaçada.',
             },
           ].map((item) => (
             <details key={item.q} className="group rounded-lg border bg-card">
@@ -323,10 +331,10 @@ export default function HowItWorksPage() {
           <div id="waitlist" className="mx-auto max-w-lg text-center">
             <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
             <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
-              Ready to start learning?
+              Pronto para começar a aprender?
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Join the waitlist and we&apos;ll notify you when CodeMentor is ready.
+              Entre na lista de espera e avisaremos quando o CodeMentor estiver pronto.
             </p>
             <div className="mt-8">
               <WaitlistForm source="how_it_works" className="justify-center" />

@@ -13,9 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { WaitlistForm } from '@/components/landing/waitlist-form';
 
 export const metadata: Metadata = {
-  title: 'CodeMentor — AI Mentor That Teaches You to Think Like a Developer',
+  title: 'CodeMentor — Um Mentor de IA Que Ensina Você a Pensar Como Desenvolvedor',
   description:
-    'Learn web development through hands-on projects with an AI mentor that uses Socratic questioning. No hand-holding, no copy-paste — real understanding.',
+    'Aprenda desenvolvimento web com projetos práticos e um mentor de IA que usa perguntas socráticas. Sem respostas prontas, sem copiar e colar — entendimento real.',
 };
 
 function TerminalMockup() {
@@ -28,32 +28,35 @@ function TerminalMockup() {
           <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
           <span className="h-3 w-3 rounded-full bg-green-500/80" />
         </div>
-        <span className="ml-2 font-mono text-xs text-white/30">~/projects</span>
+        <span className="ml-2 font-mono text-xs text-white/30">~/projetos</span>
       </div>
       {/* Terminal content */}
       <div className="space-y-3 p-4 font-mono text-[13px] leading-relaxed">
         <div>
           <span className="text-green-400">$</span>{' '}
-          <span className="text-white">codementor start &quot;todo app with auth&quot;</span>
+          <span className="text-white">
+            codementor start &quot;app de tarefas com autenticação&quot;
+          </span>
         </div>
         <div className="space-y-1 text-white/60">
           <p>
-            <span className="text-blue-400">Creating project...</span>
+            <span className="text-blue-400">Criando projeto...</span>
           </p>
           <p className="text-white/80">
-            Project <span className="text-green-400">&quot;Todo App with Authentication&quot;</span>{' '}
-            created
+            Projeto{' '}
+            <span className="text-green-400">&quot;App de Tarefas com Autenticação&quot;</span>{' '}
+            criado
           </p>
-          <p className="text-white/50">4 tasks generated based on your skill level</p>
+          <p className="text-white/50">4 tarefas geradas com base no seu nível</p>
         </div>
         <div className="border-t border-white/5 pt-3">
           <span className="text-green-400">$</span>{' '}
           <span className="text-white">codementor hint</span>
         </div>
         <div className="space-y-1.5 rounded border border-yellow-500/10 bg-yellow-500/5 px-3 py-2 text-white/70">
-          <p className="text-yellow-400/90">Hint (Level 1/4):</p>
-          <p>Think about where user data needs to persist between page loads.</p>
-          <p className="text-white/40">What browser API could help here?</p>
+          <p className="text-yellow-400/90">Dica (Nível 1/4):</p>
+          <p>Pense em onde os dados do usuário precisam persistir entre carregamentos de página.</p>
+          <p className="text-white/40">Qual API do navegador poderia ajudar aqui?</p>
         </div>
         <div className="border-t border-white/5 pt-3">
           <span className="text-green-400">$</span>{' '}
@@ -61,15 +64,15 @@ function TerminalMockup() {
         </div>
         <div className="space-y-1.5 text-white/70">
           <p>
-            <span className="text-blue-400">Reviewing your code...</span>
+            <span className="text-blue-400">Revisando seu código...</span>
           </p>
-          <p className="text-green-400">Task 1 passed!</p>
+          <p className="text-green-400">Tarefa 1 aprovada!</p>
           <p>
-            Concepts mastered: <span className="text-green-400">DOM manipulation</span>,{' '}
-            <span className="text-green-400">event handling</span>
+            Conceitos dominados: <span className="text-green-400">manipulação do DOM</span>,{' '}
+            <span className="text-green-400">tratamento de eventos</span>
           </p>
           <p className="text-white/40">
-            Question: Why did you choose addEventListener over onclick?
+            Pergunta: Por que você escolheu addEventListener ao invés de onclick?
           </p>
         </div>
         <div className="border-t border-white/5 pt-3">
@@ -83,23 +86,23 @@ function TerminalMockup() {
 const features = [
   {
     icon: MessageSquare,
-    title: 'Socratic Code Review',
+    title: 'Code Review Socrático',
     description:
-      'Your AI mentor asks "why" — not "what." Every code review probes your understanding, not just correctness.',
+      'Seu mentor de IA pergunta "por quê" — não "o quê." Cada revisão de código investiga seu entendimento, não apenas se está correto.',
     href: '/features',
   },
   {
     icon: Repeat,
-    title: 'Spaced Repetition',
+    title: 'Repetição Espaçada',
     description:
-      'Concepts resurface at optimal intervals. What you struggle with appears more often. What you master fades back.',
+      'Conceitos reaparecem em intervalos ideais. O que você tem dificuldade aparece mais. O que você domina recua gradualmente.',
     href: '/features',
   },
   {
     icon: Brain,
-    title: 'Learning Graph',
+    title: 'Grafo de Aprendizado',
     description:
-      'Visualize your knowledge as an interconnected map. See prerequisites, mastery levels, and what to learn next.',
+      'Visualize seu conhecimento como um mapa interconectado. Veja pré-requisitos, níveis de domínio e o que aprender a seguir.',
     href: '/features',
   },
 ];
@@ -115,24 +118,24 @@ export default function HomePage() {
             <div className="animate-fade-in-up max-w-xl">
               <Badge variant="secondary" className="mb-6 font-mono text-xs">
                 <Terminal className="mr-1.5 h-3 w-3" />
-                CLI-first learning platform
+                Plataforma de aprendizado CLI-first
               </Badge>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.15]">
-                An AI mentor that teaches you to{' '}
+                Um mentor de IA que ensina você a{' '}
                 <span className="underline decoration-green-500/40 decoration-2 underline-offset-4">
-                  think
+                  pensar
                 </span>{' '}
-                like a developer
+                como um desenvolvedor
               </h1>
               <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-                CodeMentor refuses to hand you code. Instead, it guides you through real projects
-                with Socratic questions, progressive hints, and AI code reviews that build genuine
-                understanding.
+                O CodeMentor se recusa a te entregar código pronto. Em vez disso, ele te guia por
+                projetos reais com perguntas socráticas, dicas progressivas e revisões de código por
+                IA que constroem entendimento genuíno.
               </p>
               <div id="waitlist" className="mt-8 max-w-md">
                 <WaitlistForm source="homepage" />
                 <p className="mt-2.5 text-xs text-muted-foreground">
-                  Join the waitlist for early access. Free tier available.
+                  Entre na lista de espera para acesso antecipado. Plano gratuito disponível.
                 </p>
               </div>
             </div>
@@ -147,32 +150,33 @@ export default function HomePage() {
       <section className="border-y bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="font-mono text-sm text-muted-foreground">The problem</p>
+            <p className="font-mono text-sm text-muted-foreground">O problema</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              AI makes you faster. It doesn&apos;t make you better.
+              IA te faz mais rápido. Não te faz melhor.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Research shows junior developers using AI score{' '}
-              <span className="font-semibold text-foreground">40% worse</span> on assessments. They
-              produce working code without understanding why it works. CodeMentor fixes that.
+              Pesquisas mostram que desenvolvedores juniores usando IA têm{' '}
+              <span className="font-semibold text-foreground">40% menos</span> desempenho em
+              avaliações. Eles produzem código que funciona sem entender por quê. O CodeMentor
+              resolve isso.
             </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
               {
                 icon: Shield,
-                label: 'No code handouts',
-                detail: 'The mentor guides, never gives answers directly',
+                label: 'Sem código de bandeja',
+                detail: 'O mentor guia, nunca entrega respostas diretamente',
               },
               {
                 icon: GitBranch,
-                label: 'Real projects',
-                detail: 'AI-generated projects matched to your skill level',
+                label: 'Projetos reais',
+                detail: 'Projetos gerados por IA adaptados ao seu nível',
               },
               {
                 icon: Brain,
-                label: 'Lasting knowledge',
-                detail: 'Spaced repetition ensures concepts stick long-term',
+                label: 'Conhecimento duradouro',
+                detail: 'Repetição espaçada garante que os conceitos fiquem a longo prazo',
               },
             ].map((item) => (
               <div key={item.label} className="rounded-lg border bg-card p-5">
@@ -188,9 +192,9 @@ export default function HomePage() {
       {/* Features grid */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-sm text-muted-foreground">Features</p>
+          <p className="font-mono text-sm text-muted-foreground">Funcionalidades</p>
           <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-            Everything you need to go from stuck to skilled
+            Tudo que você precisa para sair do zero e se tornar habilidoso
           </h2>
         </div>
         <div className="mt-14 grid gap-8 md:grid-cols-3">
@@ -208,7 +212,7 @@ export default function HomePage() {
                 {feature.description}
               </p>
               <span className="mt-4 inline-flex items-center text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                Learn more <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                Saiba mais <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </span>
             </Link>
           ))}
@@ -219,43 +223,48 @@ export default function HomePage() {
       <section className="border-y bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="font-mono text-sm text-muted-foreground">Pricing</p>
+            <p className="font-mono text-sm text-muted-foreground">Preços</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
-              Start learning for free
+              Comece a aprender de graça
             </h2>
             <p className="mt-3 text-muted-foreground">
-              No credit card required. Upgrade when you&apos;re ready.
+              Sem cartão de crédito. Faça upgrade quando estiver pronto.
             </p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               {
-                name: 'Free',
-                price: '$0',
-                period: 'forever',
-                features: ['1 project', 'AI code review', 'Progressive hints', 'Concept tracking'],
+                name: 'Gratuito',
+                price: 'R$0',
+                period: 'para sempre',
+                features: [
+                  '1 projeto',
+                  'Revisão de código por IA',
+                  'Dicas progressivas',
+                  'Rastreamento de conceitos',
+                ],
               },
               {
                 name: 'Pro',
-                price: '$15',
-                period: '/month',
+                price: 'R$49',
+                period: '/mês',
                 features: [
-                  'Unlimited projects',
-                  'Learning graph',
-                  'Spaced repetition',
-                  'Priority reviews',
+                  'Projetos ilimitados',
+                  'Grafo de aprendizado',
+                  'Repetição espaçada',
+                  'Revisões prioritárias',
                 ],
                 highlighted: true,
               },
               {
-                name: 'Teams',
-                price: '$50',
-                period: '/user/month',
+                name: 'Equipes',
+                price: 'R$149',
+                period: '/usuário/mês',
                 features: [
-                  'Everything in Pro',
-                  'Team dashboards',
-                  'Custom curricula',
-                  'Progress reports',
+                  'Tudo do Pro',
+                  'Painéis de equipe',
+                  'Currículos personalizados',
+                  'Relatórios de progresso',
                 ],
               },
             ].map((plan) => (
@@ -297,10 +306,11 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <div className="mx-auto max-w-lg text-center">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Ready to learn the right way?
+            Pronto para aprender do jeito certo?
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Join developers who are building real understanding — not just working code.
+            Junte-se a desenvolvedores que estão construindo entendimento real — não apenas código
+            que funciona.
           </p>
           <div className="mt-8">
             <WaitlistForm source="homepage" className="justify-center" />

@@ -29,7 +29,7 @@ export function WaitlistForm({ source, className }: WaitlistFormProps) {
     return (
       <div className={cn('flex items-center gap-2 text-sm font-medium text-green-600', className)}>
         <CheckCircle2 className="h-5 w-5" />
-        <span>You&apos;re on the list! We&apos;ll be in touch.</span>
+        <span>Você está na lista! Entraremos em contato.</span>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function WaitlistForm({ source, className }: WaitlistFormProps) {
           name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
+          placeholder="Digite seu email"
           required
           aria-invalid={!!result?.error}
           aria-describedby={result?.error ? 'waitlist-email-error' : undefined}
@@ -58,10 +58,10 @@ export function WaitlistForm({ source, className }: WaitlistFormProps) {
         {isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Joining...
+            Entrando...
           </>
         ) : (
-          'Join Waitlist'
+          'Entrar na Lista'
         )}
       </Button>
     </form>

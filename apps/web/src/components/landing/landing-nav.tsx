@@ -6,9 +6,9 @@ import { Code2, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/features', label: 'Features' },
-  { href: '/how-it-works', label: 'How it Works' },
+  { href: '/', label: 'Início' },
+  { href: '/features', label: 'Funcionalidades' },
+  { href: '/how-it-works', label: 'Como Funciona' },
 ];
 
 export function LandingNav() {
@@ -36,11 +36,11 @@ export function LandingNav() {
         <div className="hidden items-center space-x-2 md:flex">
           <Link href="/login">
             <Button variant="ghost" size="sm">
-              Sign In
+              Entrar
             </Button>
           </Link>
           <Link href="#waitlist">
-            <Button size="sm">Join Waitlist</Button>
+            <Button size="sm">Entrar na Lista</Button>
           </Link>
         </div>
 
@@ -52,7 +52,7 @@ export function LandingNav() {
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">Abrir menu</span>
         </Button>
       </div>
 
@@ -70,11 +70,11 @@ export function LandingNav() {
             <div className="flex flex-col space-y-2 pt-2">
               <Link href="/login" onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" className="w-full">
-                  Sign In
+                  Entrar
                 </Button>
               </Link>
               <Link href="#waitlist" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full">Join Waitlist</Button>
+                <Button className="w-full">Entrar na Lista</Button>
               </Link>
             </div>
           </nav>

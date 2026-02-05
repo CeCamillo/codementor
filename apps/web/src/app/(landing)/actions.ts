@@ -14,7 +14,7 @@ interface WaitlistResult {
 export async function joinWaitlist(email: string, source: WaitlistSource): Promise<WaitlistResult> {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return { success: false, error: 'Please enter a valid email address.' };
+    return { success: false, error: 'Por favor, insira um endereço de email válido.' };
   }
 
   const normalizedEmail = email.toLowerCase().trim();
@@ -38,6 +38,6 @@ export async function joinWaitlist(email: string, source: WaitlistSource): Promi
 
     return { success: true };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: 'Algo deu errado. Por favor, tente novamente.' };
   }
 }

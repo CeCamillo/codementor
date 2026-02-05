@@ -12,13 +12,13 @@ export function LandingFooter() {
 
         <nav className="flex items-center space-x-6 text-sm text-muted-foreground">
           <Link href="/features" className="hover:text-foreground transition-colors">
-            Features
+            Funcionalidades
           </Link>
           <Link href="/how-it-works" className="hover:text-foreground transition-colors">
-            How it Works
+            Como Funciona
           </Link>
           <Link href="/login" className="hover:text-foreground transition-colors">
-            Sign In
+            Entrar
           </Link>
         </nav>
 
