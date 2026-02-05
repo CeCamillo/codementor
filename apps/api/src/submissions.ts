@@ -7,10 +7,20 @@ import {
   reviews,
   userPreferences,
   userConcepts,
+  taskTests,
+  executionResults,
 } from '@codementor/db/schema';
 import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { generateReview, getConceptById, calculateSpacedRepetition } from '@codementor/ai';
+import {
+  generateReview,
+  getConceptById,
+  calculateSpacedRepetition,
+  runTests,
+  detectAntiPatterns,
+  assessReasoning,
+  formatReasoningQuestions,
+} from '@codementor/ai';
 import type { SubmitResponse } from '@codementor/shared';
 import { validateSession, isValidationError } from './middleware/auth';
 
@@ -269,18 +279,74 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         .set({ status: 'reviewing' })
         .where(eq(submissions.id, submissionId));
 
-      // Generate AI review
-      const review = await generateReview({
-        task: {
-          id: currentTask.id,
-          title: currentTask.title,
-          description: currentTask.description,
-          objectives: currentTask.objectives,
-          conceptIds: currentTask.conceptIds,
-        },
-        files,
-        difficulty: activeProject.difficulty as 'beginner' | 'intermediate' | 'advanced',
-      });
+      const difficulty = activeProject.difficulty as 'beginner' | 'intermediate' | 'advanced';
+
+      // Run all review components in parallel
+      const [review, sandboxResults, antiPatternResults, reasoningResults, storedTests] =
+        await Promise.all([
+          // Generate AI review
+          generateReview({
+            task: {
+              id: currentTask.id,
+              title: currentTask.title,
+              description: currentTask.description,
+              objectives: currentTask.objectives,
+              conceptIds: currentTask.conceptIds,
+            },
+            files,
+            difficulty,
+          }),
+          // Run sandbox tests
+          (async () => {
+            const tests = await db
+              .select()
+              .from(taskTests)
+              .where(eq(taskTests.taskId, currentTask.id));
+
+            return runTests({
+              files,
+              tests: tests.map((t) => ({
+                id: t.id,
+                name: t.testName,
+                code: t.testCode,
+                testType: t.testType as 'unit' | 'edge_case' | 'behavior',
+                expectedBehavior: t.expectedBehavior,
+              })),
+              taskDescription: currentTask.description,
+              objectives: currentTask.objectives,
+            });
+          })(),
+          // Detect anti-patterns
+          detectAntiPatterns({
+            files,
+            difficulty,
+          }),
+          // Assess reasoning
+          assessReasoning({
+            task: {
+              title: currentTask.title,
+              description: currentTask.description,
+              objectives: currentTask.objectives,
+            },
+            files,
+            difficulty,
+          }),
+          // Get stored tests for execution results
+          db.select().from(taskTests).where(eq(taskTests.taskId, currentTask.id)),
+        ]);
+
+      // Calculate weighted pass/fail based on all review components
+      const testsAllPassed = sandboxResults.failedTests === 0;
+      const hasErrorAntiPatterns = antiPatternResults.summary.bySeverity.error > 0;
+
+      // Weighted scoring: AI review is primary, tests and anti-patterns are secondary
+      const finalPassed = review.passed && testsAllPassed && !hasErrorAntiPatterns;
+
+      // Combine reflection questions with reasoning questions
+      const allReflectionQuestions = [
+        ...review.reflectionQuestions,
+        ...formatReasoningQuestions(reasoningResults.questions),
+      ];
 
       // Store review in database
       const reviewId = generateId();
@@ -288,7 +354,7 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         id: reviewId,
         submissionId: submissionId,
         overallFeedback: review.overallFeedback,
-        passed: review.passed ? 'true' : 'false',
+        passed: finalPassed ? 'true' : 'false',
         conceptsFeedback: review.conceptsFeedback.map((cf) => ({
           conceptId: cf.conceptId,
           demonstrated: cf.demonstrated,
@@ -297,10 +363,25 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         })),
         codeComments: review.codeComments,
         suggestedResources: review.suggestedResources,
+        reflectionQuestions: allReflectionQuestions,
       });
 
+      // Store execution results
+      for (const testResult of sandboxResults.results) {
+        const matchingTest = storedTests.find((t) => t.testName === testResult.testName);
+        await db.insert(executionResults).values({
+          id: generateId(),
+          submissionId: submissionId,
+          testId: matchingTest?.id ?? null,
+          passed: testResult.passed ? 'true' : 'false',
+          stdout: testResult.stdout,
+          stderr: testResult.stderr,
+          executionTimeMs: testResult.executionTimeMs,
+        });
+      }
+
       // Update submission status based on review result
-      const submissionStatus = review.passed ? 'passed' : 'needs_work';
+      const submissionStatus = finalPassed ? 'passed' : 'needs_work';
       await db
         .update(submissions)
         .set({ status: submissionStatus })
@@ -315,7 +396,7 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
       let taskAdvanced = false;
       let nextTask: { id: string; title: string; order: number } | null = null;
 
-      if (review.passed) {
+      if (finalPassed) {
         // Mark current task as completed
         await db
           .update(tasks)
@@ -382,7 +463,7 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
       }
 
       // Update streak on successful submission
-      if (review.passed) {
+      if (finalPassed) {
         await updateStreak(user.id);
       }
 
@@ -427,16 +508,37 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         },
         review: {
           overallFeedback: review.overallFeedback,
-          passed: review.passed,
+          passed: finalPassed,
           conceptsFeedback: conceptsFeedbackWithNames,
           codeComments: review.codeComments,
           suggestedResources: review.suggestedResources,
-          reflectionQuestions: review.reflectionQuestions,
+          reflectionQuestions: allReflectionQuestions,
         },
         taskAdvanced,
         nextTask,
         conceptMastery: conceptMasteryResponse,
         strugglingConcepts: strugglingResponse.length > 0 ? strugglingResponse : undefined,
+        // Enhanced review fields
+        executionResults: {
+          passed: sandboxResults.passedTests,
+          failed: sandboxResults.failedTests,
+          total: sandboxResults.totalTests,
+          tests: sandboxResults.results.map((r) => ({
+            name: r.testName,
+            passed: r.passed,
+            error: r.error,
+          })),
+          sandboxAvailable: sandboxResults.available,
+        },
+        antiPatterns: antiPatternResults.antiPatterns.map((ap) => ({
+          type: ap.type,
+          category: ap.category,
+          location: ap.location,
+          message: ap.message,
+          suggestion: ap.suggestion,
+          severity: ap.severity,
+        })),
+        reasoningQuestions: formatReasoningQuestions(reasoningResults.questions),
       };
 
       return response;

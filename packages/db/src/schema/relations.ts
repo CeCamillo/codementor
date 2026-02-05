@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
 import { users, userPreferences, sessions } from './users';
-import { projects, tasks, submissions, reviews } from './projects';
+import { projects, tasks, submissions, reviews, taskTests, executionResults } from './projects';
 import { concepts, userConcepts, conceptRelationships } from './concepts';
 
 // User relations
@@ -48,9 +48,10 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
     references: [projects.id],
   }),
   submissions: many(submissions),
+  tests: many(taskTests),
 }));
 
-export const submissionsRelations = relations(submissions, ({ one }) => ({
+export const submissionsRelations = relations(submissions, ({ one, many }) => ({
   task: one(tasks, {
     fields: [submissions.taskId],
     references: [tasks.id],
@@ -63,12 +64,33 @@ export const submissionsRelations = relations(submissions, ({ one }) => ({
     fields: [submissions.id],
     references: [reviews.submissionId],
   }),
+  executionResults: many(executionResults),
 }));
 
 export const reviewsRelations = relations(reviews, ({ one }) => ({
   submission: one(submissions, {
     fields: [reviews.submissionId],
     references: [submissions.id],
+  }),
+}));
+
+// Task tests relations
+export const taskTestsRelations = relations(taskTests, ({ one, many }) => ({
+  task: one(tasks, {
+    fields: [taskTests.taskId],
+    references: [tasks.id],
+  }),
+  executionResults: many(executionResults),
+}));
+
+export const executionResultsRelations = relations(executionResults, ({ one }) => ({
+  submission: one(submissions, {
+    fields: [executionResults.submissionId],
+    references: [submissions.id],
+  }),
+  test: one(taskTests, {
+    fields: [executionResults.testId],
+    references: [taskTests.id],
   }),
 }));
 

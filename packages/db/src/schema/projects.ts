@@ -153,3 +153,41 @@ export const userTaskHints = pgTable(
     index('user_task_hints_task_id_idx').on(table.taskId),
   ]
 );
+
+export const taskTests = pgTable(
+  'task_tests',
+  {
+    id: text('id').primaryKey(),
+    taskId: text('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    testName: text('test_name').notNull(),
+    testCode: text('test_code').notNull(),
+    testType: text('test_type', {
+      enum: ['unit', 'edge_case', 'behavior'],
+    }).notNull(),
+    expectedBehavior: text('expected_behavior').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('task_tests_task_id_idx').on(table.taskId)]
+);
+
+export const executionResults = pgTable(
+  'execution_results',
+  {
+    id: text('id').primaryKey(),
+    submissionId: text('submission_id')
+      .notNull()
+      .references(() => submissions.id, { onDelete: 'cascade' }),
+    testId: text('test_id').references(() => taskTests.id, { onDelete: 'set null' }),
+    passed: text('passed', { enum: ['true', 'false'] }).notNull(),
+    stdout: text('stdout'),
+    stderr: text('stderr'),
+    executionTimeMs: integer('execution_time_ms'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('execution_results_submission_id_idx').on(table.submissionId),
+    index('execution_results_test_id_idx').on(table.testId),
+  ]
+);

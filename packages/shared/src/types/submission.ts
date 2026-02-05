@@ -45,6 +45,27 @@ export interface SubmitResponse {
         consecutiveFailures: number;
       }>
     | undefined;
+  // New fields for enhanced review
+  executionResults?: {
+    passed: number;
+    failed: number;
+    total: number;
+    tests: Array<{
+      name: string;
+      passed: boolean;
+      error?: string;
+    }>;
+    sandboxAvailable: boolean;
+  };
+  antiPatterns?: Array<{
+    type: string;
+    category: string;
+    location: { file: string; line: number };
+    message: string;
+    suggestion: string;
+    severity: 'warning' | 'error';
+  }>;
+  reasoningQuestions?: string[];
 }
 
 export interface ReflectionRespondRequest {
