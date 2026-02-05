@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 
 interface CurrentTaskResponse {
   project: {
@@ -37,6 +37,43 @@ interface AllTasksCompletedResponse {
 interface ErrorResponse {
   error: string;
   error_description: string;
+}
+
+interface TaskDetailResponse {
+  task: {
+    id: string;
+    title: string;
+    description: string;
+    objectives: string[];
+    hints: string[];
+    order: number;
+    status: string;
+    concepts: Array<{
+      id: string;
+      name: string;
+      resources: Array<{ title: string; url: string; type: string }>;
+    }>;
+    createdAt: string;
+    completedAt: string | null;
+  };
+  project: {
+    id: string;
+    title: string;
+    difficulty: string;
+  };
+}
+
+interface TaskHintResponse {
+  hint: string | null;
+  hintIndex: number;
+  totalHints: number;
+  hasMoreHints: boolean;
+}
+
+interface ReflectionRespondResponse {
+  success: true;
+  followupFeedback: string;
+  encouragement: string;
 }
 
 describe('Tasks API Routes', () => {
@@ -701,6 +738,536 @@ describe('Tasks API Routes', () => {
       const data = (await response.json()) as ErrorResponse;
       expect(data.error).toBe('invalid_state');
       expect(data.error_description).toContain('invalid state');
+    });
+  });
+
+  describe('GET /api/tasks/:id', () => {
+    it('returns 401 without authorization header', async () => {
+      const app = new Elysia().get('/api/tasks/:id', ({ headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return {
+            error: 'unauthorized',
+            error_description: 'Missing or invalid authorization header',
+          };
+        }
+        return { task: {}, project: {} };
+      });
+
+      const response = await app.handle(new Request('http://localhost/api/tasks/task-123'));
+
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const app = new Elysia().get('/api/tasks/:id', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'non-existent') {
+          set.status = 404;
+          return { error: 'not_found', error_description: 'Task not found' };
+        }
+
+        return { task: {}, project: {} };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/non-existent', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(404);
+
+      const data = (await response.json()) as ErrorResponse;
+      expect(data.error).toBe('not_found');
+    });
+
+    it('returns task details with project context', async () => {
+      const mockResponse: TaskDetailResponse = {
+        task: {
+          id: 'task-123',
+          title: 'Create HTML Structure',
+          description: 'Set up the basic HTML structure',
+          objectives: ['Create index.html', 'Add semantic elements'],
+          hints: ['Start with doctype', 'Use semantic tags'],
+          order: 1,
+          status: 'available',
+          concepts: [
+            {
+              id: 'html-structure',
+              name: 'HTML Document Structure',
+              resources: [
+                { title: 'MDN HTML', url: 'https://developer.mozilla.org', type: 'documentation' },
+              ],
+            },
+          ],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          completedAt: null,
+        },
+        project: {
+          id: 'project-123',
+          title: 'Todo App',
+          difficulty: 'beginner',
+        },
+      };
+
+      const app = new Elysia().get('/api/tasks/:id', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'task-123') {
+          return mockResponse;
+        }
+
+        set.status = 404;
+        return { error: 'not_found' };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(200);
+
+      const data = (await response.json()) as TaskDetailResponse;
+      expect(data.task.id).toBe('task-123');
+      expect(data.task.title).toBe('Create HTML Structure');
+      expect(data.task.objectives).toBeArray();
+      expect(data.task.hints).toBeArray();
+      expect(data.task.concepts).toBeArray();
+      expect(data.project.id).toBe('project-123');
+      expect(data.project.difficulty).toBe('beginner');
+    });
+
+    it('returns completed task with completedAt timestamp', async () => {
+      const mockResponse: TaskDetailResponse = {
+        task: {
+          id: 'task-123',
+          title: 'Create HTML Structure',
+          description: 'Set up the basic HTML structure',
+          objectives: [],
+          hints: [],
+          order: 1,
+          status: 'completed',
+          concepts: [],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          completedAt: '2024-01-01T12:00:00.000Z',
+        },
+        project: {
+          id: 'project-123',
+          title: 'Todo App',
+          difficulty: 'beginner',
+        },
+      };
+
+      const app = new Elysia().get('/api/tasks/:id', ({ headers, set }) => {
+        if (!headers['authorization']?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return mockResponse;
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      const data = (await response.json()) as TaskDetailResponse;
+      expect(data.task.status).toBe('completed');
+      expect(data.task.completedAt).toBe('2024-01-01T12:00:00.000Z');
+    });
+  });
+
+  describe('GET /api/tasks/:id/hint', () => {
+    it('returns 401 without authorization header', async () => {
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return { hint: null, hintIndex: 0, totalHints: 0, hasMoreHints: false };
+      });
+
+      const response = await app.handle(new Request('http://localhost/api/tasks/task-123/hint'));
+
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ params, headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+
+        if (params.id === 'non-existent') {
+          set.status = 404;
+          return { error: 'not_found', error_description: 'Task not found' };
+        }
+
+        return { hint: 'A hint', hintIndex: 0, totalHints: 1, hasMoreHints: false };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/non-existent/hint', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(404);
+    });
+
+    it('returns first hint for task', async () => {
+      const mockResponse: TaskHintResponse = {
+        hint: 'Start with the doctype declaration',
+        hintIndex: 0,
+        totalHints: 3,
+        hasMoreHints: true,
+      };
+
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ headers, set }) => {
+        if (!headers['authorization']?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return mockResponse;
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/hint', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      expect(response.status).toBe(200);
+
+      const data = (await response.json()) as TaskHintResponse;
+      expect(data.hint).toBe('Start with the doctype declaration');
+      expect(data.hintIndex).toBe(0);
+      expect(data.totalHints).toBe(3);
+      expect(data.hasMoreHints).toBe(true);
+    });
+
+    it('returns subsequent hint with incremented index', async () => {
+      const mockResponse: TaskHintResponse = {
+        hint: 'Use semantic HTML tags',
+        hintIndex: 1,
+        totalHints: 3,
+        hasMoreHints: true,
+      };
+
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ headers, set }) => {
+        if (!headers['authorization']?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return mockResponse;
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/hint', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      const data = (await response.json()) as TaskHintResponse;
+      expect(data.hintIndex).toBe(1);
+      expect(data.hasMoreHints).toBe(true);
+    });
+
+    it('returns last hint with hasMoreHints false', async () => {
+      const mockResponse: TaskHintResponse = {
+        hint: 'Consider accessibility attributes',
+        hintIndex: 2,
+        totalHints: 3,
+        hasMoreHints: false,
+      };
+
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ headers, set }) => {
+        if (!headers['authorization']?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return mockResponse;
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/hint', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      const data = (await response.json()) as TaskHintResponse;
+      expect(data.hintIndex).toBe(2);
+      expect(data.hasMoreHints).toBe(false);
+    });
+
+    it('returns null hint for task with no hints', async () => {
+      const mockResponse: TaskHintResponse = {
+        hint: null,
+        hintIndex: 0,
+        totalHints: 0,
+        hasMoreHints: false,
+      };
+
+      const app = new Elysia().get('/api/tasks/:id/hint', ({ headers, set }) => {
+        if (!headers['authorization']?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return mockResponse;
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/hint', {
+          headers: { Authorization: 'Bearer valid-token' },
+        })
+      );
+
+      const data = (await response.json()) as TaskHintResponse;
+      expect(data.hint).toBeNull();
+      expect(data.totalHints).toBe(0);
+      expect(data.hasMoreHints).toBe(false);
+    });
+  });
+
+  describe('POST /api/tasks/:id/respond', () => {
+    it('returns 401 without authorization header', async () => {
+      const app = new Elysia().post('/api/tasks/:id/respond', ({ headers, set }) => {
+        const authHeader = headers['authorization'];
+        if (!authHeader?.startsWith('Bearer ')) {
+          set.status = 401;
+          return { error: 'unauthorized' };
+        }
+        return { success: true, followupFeedback: '', encouragement: '' };
+      });
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/respond', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: 'sub-1', responses: [] }),
+        })
+      );
+
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 404 for non-existent task', async () => {
+      const app = new Elysia().post(
+        '/api/tasks/:id/respond',
+        ({ params, headers, set }) => {
+          const authHeader = headers['authorization'];
+          if (!authHeader?.startsWith('Bearer ')) {
+            set.status = 401;
+            return { error: 'unauthorized' };
+          }
+
+          if (params.id === 'non-existent') {
+            set.status = 404;
+            return { error: 'not_found', error_description: 'Task not found' };
+          }
+
+          return { success: true, followupFeedback: '', encouragement: '' };
+        },
+        {
+          body: t.Object({
+            submissionId: t.String(),
+            responses: t.Array(
+              t.Object({
+                questionIndex: t.Number(),
+                answer: t.String(),
+              })
+            ),
+          }),
+        }
+      );
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/non-existent/respond', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-token',
+          },
+          body: JSON.stringify({ submissionId: 'sub-1', responses: [] }),
+        })
+      );
+
+      expect(response.status).toBe(404);
+    });
+
+    it('returns 404 for non-existent submission', async () => {
+      const app = new Elysia().post(
+        '/api/tasks/:id/respond',
+        ({ body, headers, set }) => {
+          const authHeader = headers['authorization'];
+          if (!authHeader?.startsWith('Bearer ')) {
+            set.status = 401;
+            return { error: 'unauthorized' };
+          }
+
+          if (body.submissionId === 'non-existent') {
+            set.status = 404;
+            return { error: 'not_found', error_description: 'Submission not found' };
+          }
+
+          return { success: true, followupFeedback: '', encouragement: '' };
+        },
+        {
+          body: t.Object({
+            submissionId: t.String(),
+            responses: t.Array(
+              t.Object({
+                questionIndex: t.Number(),
+                answer: t.String(),
+              })
+            ),
+          }),
+        }
+      );
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/respond', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-token',
+          },
+          body: JSON.stringify({ submissionId: 'non-existent', responses: [] }),
+        })
+      );
+
+      expect(response.status).toBe(404);
+
+      const data = (await response.json()) as ErrorResponse;
+      expect(data.error).toBe('not_found');
+    });
+
+    it('returns followup feedback for valid reflection responses', async () => {
+      const mockResponse: ReflectionRespondResponse = {
+        success: true,
+        followupFeedback:
+          "Great insight about state management! You're on the right track thinking about where data should live.",
+        encouragement:
+          "You're making excellent progress in understanding React patterns. Keep up the good work!",
+      };
+
+      const app = new Elysia().post(
+        '/api/tasks/:id/respond',
+        ({ headers, set }) => {
+          if (!headers['authorization']?.startsWith('Bearer ')) {
+            set.status = 401;
+            return { error: 'unauthorized' };
+          }
+          return mockResponse;
+        },
+        {
+          body: t.Object({
+            submissionId: t.String(),
+            responses: t.Array(
+              t.Object({
+                questionIndex: t.Number(),
+                answer: t.String(),
+              })
+            ),
+          }),
+        }
+      );
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/respond', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-token',
+          },
+          body: JSON.stringify({
+            submissionId: 'submission-123',
+            responses: [
+              {
+                questionIndex: 0,
+                answer: 'I think state should be lifted up to the parent component.',
+              },
+              {
+                questionIndex: 1,
+                answer: 'Using useEffect for side effects makes the code cleaner.',
+              },
+            ],
+          }),
+        })
+      );
+
+      expect(response.status).toBe(200);
+
+      const data = (await response.json()) as ReflectionRespondResponse;
+      expect(data.success).toBe(true);
+      expect(data.followupFeedback).toContain('state management');
+      expect(data.encouragement).toContain('excellent progress');
+    });
+
+    it('accepts single response', async () => {
+      const mockResponse: ReflectionRespondResponse = {
+        success: true,
+        followupFeedback: 'Good thinking!',
+        encouragement: 'Keep it up!',
+      };
+
+      const app = new Elysia().post(
+        '/api/tasks/:id/respond',
+        ({ headers, set }) => {
+          if (!headers['authorization']?.startsWith('Bearer ')) {
+            set.status = 401;
+            return { error: 'unauthorized' };
+          }
+          return mockResponse;
+        },
+        {
+          body: t.Object({
+            submissionId: t.String(),
+            responses: t.Array(
+              t.Object({
+                questionIndex: t.Number(),
+                answer: t.String(),
+              })
+            ),
+          }),
+        }
+      );
+
+      const response = await app.handle(
+        new Request('http://localhost/api/tasks/task-123/respond', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer valid-token',
+          },
+          body: JSON.stringify({
+            submissionId: 'submission-123',
+            responses: [{ questionIndex: 0, answer: 'My answer to the question.' }],
+          }),
+        })
+      );
+
+      expect(response.status).toBe(200);
+
+      const data = (await response.json()) as ReflectionRespondResponse;
+      expect(data.success).toBe(true);
     });
   });
 });

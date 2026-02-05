@@ -115,7 +115,41 @@ export const reviews = pgTable(
       .notNull()
       .default([]),
     suggestedResources: jsonb('suggested_resources').$type<string[]>().notNull().default([]),
+    reflectionQuestions: jsonb('reflection_questions').$type<string[]>().notNull().default([]),
+    reflectionResponses: jsonb('reflection_responses')
+      .$type<
+        Array<{
+          questionIndex: number;
+          answer: string;
+          followupFeedback?: string;
+          respondedAt: string;
+        }>
+      >()
+      .default([]),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('reviews_submission_id_idx').on(table.submissionId)]
+);
+
+export const userTaskHints = pgTable(
+  'user_task_hints',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    taskId: text('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    hintIndex: integer('hint_index').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    unique('user_task_hints_user_id_task_id_unique').on(table.userId, table.taskId),
+    index('user_task_hints_user_id_idx').on(table.userId),
+    index('user_task_hints_task_id_idx').on(table.taskId),
+  ]
 );

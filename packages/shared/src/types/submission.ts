@@ -30,3 +30,17 @@ export interface SubmitResponse {
   taskAdvanced: boolean;
   nextTask: { id: string; title: string; order: number } | null;
 }
+
+export interface ReflectionRespondRequest {
+  submissionId: string;
+  responses: Array<{
+    questionIndex: number;
+    answer: string;
+  }>;
+}
+
+export interface ReflectionRespondResponse {
+  success: true;
+  followupFeedback: string;
+  encouragement: string;
+}
