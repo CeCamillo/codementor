@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
-import { projects, tasks, submissions, reviews } from '@codementor/db/schema';
+import { projects, tasks, submissions, reviews, userPreferences } from '@codementor/db/schema';
 import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { generateReview, getConceptById } from '@codementor/ai';
@@ -9,6 +9,74 @@ import { validateSession, isValidationError } from './middleware/auth';
 
 function generateId(): string {
   return randomBytes(16).toString('hex');
+}
+
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
+function isYesterday(date: Date, today: Date): boolean {
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameDay(date, yesterday);
+}
+
+async function updateStreak(userId: string): Promise<void> {
+  const today = new Date();
+
+  const [prefs] = await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
+
+  if (!prefs) {
+    // Create preferences with initial streak
+    await db.insert(userPreferences).values({
+      userId,
+      lastActivityDate: today,
+      currentStreak: 1,
+    });
+    return;
+  }
+
+  if (!prefs.lastActivityDate) {
+    // No previous activity, start streak at 1
+    await db
+      .update(userPreferences)
+      .set({
+        lastActivityDate: today,
+        currentStreak: 1,
+      })
+      .where(eq(userPreferences.userId, userId));
+    return;
+  }
+
+  if (isSameDay(prefs.lastActivityDate, today)) {
+    // Already active today, no change
+    return;
+  }
+
+  if (isYesterday(prefs.lastActivityDate, today)) {
+    // Consecutive day, increment streak
+    await db
+      .update(userPreferences)
+      .set({
+        lastActivityDate: today,
+        currentStreak: prefs.currentStreak + 1,
+      })
+      .where(eq(userPreferences.userId, userId));
+    return;
+  }
+
+  // More than a day gap, reset streak to 1
+  await db
+    .update(userPreferences)
+    .set({
+      lastActivityDate: today,
+      currentStreak: 1,
+    })
+    .where(eq(userPreferences.userId, userId));
 }
 
 export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
@@ -225,6 +293,11 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
             .set({ status: 'in_progress' })
             .where(eq(projects.id, activeProject.id));
         }
+      }
+
+      // Update streak on successful submission
+      if (review.passed) {
+        await updateStreak(user.id);
       }
 
       // Build response with concept names

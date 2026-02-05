@@ -6,6 +6,7 @@ export * from './types/review';
 export * from './types/project-generation';
 export * from './types/task-display';
 export * from './types/submission';
+export * from './types/progress';
 
 // Utils
 export * from './utils/result';

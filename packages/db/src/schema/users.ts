@@ -24,6 +24,8 @@ export const userPreferences = pgTable('user_preferences', {
   dailyGoalMinutes: integer('daily_goal_minutes').notNull().default(30),
   preferredLanguages: jsonb('preferred_languages').$type<string[]>().notNull().default([]),
   notificationsEnabled: boolean('notifications_enabled').notNull().default(true),
+  lastActivityDate: timestamp('last_activity_date', { withTimezone: true }),
+  currentStreak: integer('current_streak').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()
