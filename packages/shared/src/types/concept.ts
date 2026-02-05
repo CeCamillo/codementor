@@ -22,10 +22,17 @@ export interface UserConcept {
   conceptId: string;
   masteryLevel: number; // 0-100
   practiceCount: number;
+  consecutiveFailures: number; // For struggling detection
   lastPracticedAt?: Date;
   nextReviewAt?: Date; // Spaced repetition
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserConceptWithDetails extends UserConcept {
+  concept?: Concept;
+  isDueForReview: boolean;
+  isStruggling: boolean;
 }
 
 export type MasteryLevel = 'novice' | 'familiar' | 'proficient' | 'mastered';
