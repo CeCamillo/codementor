@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicPaths = ['/login', '/api/auth'];
+const publicPrefixes = ['/login', '/api/auth'];
+const publicExactPaths = ['/', '/features', '/how-it-works'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
+  if (
+    publicExactPaths.includes(pathname) ||
+    publicPrefixes.some((prefix) => pathname.startsWith(prefix))
+  ) {
     return NextResponse.next();
   }
 
