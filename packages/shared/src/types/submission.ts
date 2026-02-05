@@ -2,6 +2,14 @@ export interface SubmitRequest {
   files: Array<{ path: string; content: string }>;
 }
 
+export interface ConceptMasteryUpdate {
+  conceptId: string;
+  conceptName: string;
+  newMasteryLevel: number;
+  nextReviewAt: string;
+  isStruggling: boolean;
+}
+
 export interface SubmitResponse {
   submission: {
     id: string;
@@ -29,6 +37,14 @@ export interface SubmitResponse {
   };
   taskAdvanced: boolean;
   nextTask: { id: string; title: string; order: number } | null;
+  conceptMastery?: ConceptMasteryUpdate[] | undefined;
+  strugglingConcepts?:
+    | Array<{
+        conceptId: string;
+        conceptName: string;
+        consecutiveFailures: number;
+      }>
+    | undefined;
 }
 
 export interface ReflectionRespondRequest {

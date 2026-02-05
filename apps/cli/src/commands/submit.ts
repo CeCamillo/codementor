@@ -68,8 +68,49 @@ function collectFiles(dir: string, baseDir: string = dir): FileInfo[] {
   return files;
 }
 
+function printMasteryUpdates(
+  conceptMastery:
+    | Array<{
+        conceptId: string;
+        conceptName: string;
+        newMasteryLevel: number;
+        nextReviewAt: string;
+        isStruggling: boolean;
+      }>
+    | undefined
+): void {
+  if (!conceptMastery || conceptMastery.length === 0) return;
+
+  console.log('\x1b[1mConcept Progress:\x1b[0m');
+  for (const update of conceptMastery) {
+    const masteryBar = formatMasteryBar(update.newMasteryLevel);
+    const statusIcon = update.isStruggling ? '\x1b[33m⚠\x1b[0m' : '\x1b[32m↑\x1b[0m';
+    console.log(`  ${statusIcon} ${update.conceptName}: ${masteryBar} ${update.newMasteryLevel}%`);
+  }
+  console.log();
+}
+
+function formatMasteryBar(mastery: number): string {
+  const width = 10;
+  const filled = Math.round((mastery / 100) * width);
+  const empty = width - filled;
+
+  let color: string;
+  if (mastery >= 80) {
+    color = '\x1b[32m'; // green
+  } else if (mastery >= 50) {
+    color = '\x1b[33m'; // yellow
+  } else if (mastery >= 25) {
+    color = '\x1b[34m'; // blue
+  } else {
+    color = '\x1b[31m'; // red
+  }
+
+  return `${color}${'█'.repeat(filled)}\x1b[90m${'░'.repeat(empty)}\x1b[0m`;
+}
+
 function printPassedReview(response: SubmitResponse): void {
-  const { review, nextTask } = response;
+  const { review, nextTask, conceptMastery } = response;
 
   console.log();
   console.log('\x1b[32m✓ Task Completed!\x1b[0m');
@@ -78,6 +119,9 @@ function printPassedReview(response: SubmitResponse): void {
   // Overall feedback
   console.log('\x1b[1mOverall:\x1b[0m ' + review.overallFeedback);
   console.log();
+
+  // Show mastery updates
+  printMasteryUpdates(conceptMastery);
 
   // What you did well (concepts demonstrated)
   const demonstrated = review.conceptsFeedback.filter((cf) => cf.demonstrated);
@@ -128,8 +172,38 @@ function printPassedReview(response: SubmitResponse): void {
   }
 }
 
+function printStrugglingAlert(
+  strugglingConcepts: Array<{ conceptId: string; conceptName: string; consecutiveFailures: number }>
+): void {
+  console.log();
+  console.log('\x1b[35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m');
+  console.log('\x1b[35m  We noticed you might be stuck on some concepts.\x1b[0m');
+  console.log("\x1b[35m  That's completely normal - learning takes time!\x1b[0m");
+  console.log('\x1b[35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m');
+  console.log();
+
+  for (const concept of strugglingConcepts) {
+    console.log(
+      `  \x1b[33m⚠\x1b[0m  ${concept.conceptName} - ${concept.consecutiveFailures} attempts`
+    );
+  }
+  console.log();
+
+  console.log('\x1b[1mSuggestions:\x1b[0m');
+  console.log('  1. Take a short break and return with fresh eyes');
+  console.log('  2. Try \x1b[33mcodementor hint\x1b[0m for guidance');
+  console.log('  3. Review the concept in \x1b[33mcodementor concepts\x1b[0m');
+  console.log('  4. Consider breaking the task into smaller pieces');
+  console.log();
+}
+
 function printNeedsWorkReview(response: SubmitResponse): void {
-  const { review } = response;
+  const { review, strugglingConcepts, conceptMastery } = response;
+
+  // Show struggling alert first if applicable
+  if (strugglingConcepts && strugglingConcepts.length > 0) {
+    printStrugglingAlert(strugglingConcepts);
+  }
 
   console.log();
   console.log('\x1b[33m○ Almost there!\x1b[0m');
@@ -138,6 +212,9 @@ function printNeedsWorkReview(response: SubmitResponse): void {
   // Overall feedback
   console.log('\x1b[1mOverall:\x1b[0m ' + review.overallFeedback);
   console.log();
+
+  // Show mastery updates
+  printMasteryUpdates(conceptMastery);
 
   // Code comments (issues and critical first)
   const issueComments = review.codeComments.filter(

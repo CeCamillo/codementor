@@ -1,9 +1,16 @@
 import { Elysia, t } from 'elysia';
 import { db } from '@codementor/db';
-import { projects, tasks, submissions, reviews, userPreferences } from '@codementor/db/schema';
+import {
+  projects,
+  tasks,
+  submissions,
+  reviews,
+  userPreferences,
+  userConcepts,
+} from '@codementor/db/schema';
 import { eq, and, or, desc, asc } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import { generateReview, getConceptById } from '@codementor/ai';
+import { generateReview, getConceptById, calculateSpacedRepetition } from '@codementor/ai';
 import type { SubmitResponse } from '@codementor/shared';
 import { validateSession, isValidationError } from './middleware/auth';
 
@@ -23,6 +30,79 @@ function isYesterday(date: Date, today: Date): boolean {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   return isSameDay(date, yesterday);
+}
+
+interface ConceptMasteryUpdate {
+  conceptId: string;
+  newMasteryLevel: number;
+  nextReviewAt: Date;
+  consecutiveFailures: number;
+  isStruggling: boolean;
+}
+
+async function updateConceptMastery(
+  userId: string,
+  conceptsFeedback: Array<{ conceptId: string; demonstrated: boolean }>
+): Promise<ConceptMasteryUpdate[]> {
+  const updates: ConceptMasteryUpdate[] = [];
+
+  for (const cf of conceptsFeedback) {
+    // Get current user concept record or defaults
+    const [existing] = await db
+      .select()
+      .from(userConcepts)
+      .where(and(eq(userConcepts.userId, userId), eq(userConcepts.conceptId, cf.conceptId)));
+
+    const currentMastery = existing?.masteryLevel ?? 0;
+    const currentPracticeCount = existing?.practiceCount ?? 0;
+    const currentFailures = existing?.consecutiveFailures ?? 0;
+
+    // Calculate new values using spaced repetition algorithm
+    const result = calculateSpacedRepetition({
+      masteryLevel: currentMastery,
+      practiceCount: currentPracticeCount,
+      demonstrated: cf.demonstrated,
+      lastPracticedAt: existing?.lastPracticedAt ?? undefined,
+      consecutiveFailures: currentFailures,
+    });
+
+    const now = new Date();
+
+    if (existing) {
+      // Update existing record
+      await db
+        .update(userConcepts)
+        .set({
+          masteryLevel: result.newMasteryLevel,
+          practiceCount: currentPracticeCount + 1,
+          consecutiveFailures: result.consecutiveFailures,
+          lastPracticedAt: now,
+          nextReviewAt: result.nextReviewAt,
+        })
+        .where(and(eq(userConcepts.userId, userId), eq(userConcepts.conceptId, cf.conceptId)));
+    } else {
+      // Insert new record
+      await db.insert(userConcepts).values({
+        userId,
+        conceptId: cf.conceptId,
+        masteryLevel: result.newMasteryLevel,
+        practiceCount: 1,
+        consecutiveFailures: result.consecutiveFailures,
+        lastPracticedAt: now,
+        nextReviewAt: result.nextReviewAt,
+      });
+    }
+
+    updates.push({
+      conceptId: cf.conceptId,
+      newMasteryLevel: result.newMasteryLevel,
+      nextReviewAt: result.nextReviewAt,
+      consecutiveFailures: result.consecutiveFailures,
+      isStruggling: result.isStruggling,
+    });
+  }
+
+  return updates;
 }
 
 async function updateStreak(userId: string): Promise<void> {
@@ -226,6 +306,12 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         .set({ status: submissionStatus })
         .where(eq(submissions.id, submissionId));
 
+      // Update concept mastery with spaced repetition
+      const conceptUpdates = await updateConceptMastery(user.id, review.conceptsFeedback);
+
+      // Check if user is struggling with any concept
+      const strugglingConcepts = conceptUpdates.filter((u) => u.isStruggling);
+
       let taskAdvanced = false;
       let nextTask: { id: string; title: string; order: number } | null = null;
 
@@ -311,6 +397,28 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         };
       });
 
+      // Build concept mastery response
+      const conceptMasteryResponse = conceptUpdates.map((update) => {
+        const concept = getConceptById(update.conceptId);
+        return {
+          conceptId: update.conceptId,
+          conceptName: concept?.name ?? update.conceptId,
+          newMasteryLevel: update.newMasteryLevel,
+          nextReviewAt: update.nextReviewAt.toISOString(),
+          isStruggling: update.isStruggling,
+        };
+      });
+
+      // Build struggling concepts response
+      const strugglingResponse = strugglingConcepts.map((update) => {
+        const concept = getConceptById(update.conceptId);
+        return {
+          conceptId: update.conceptId,
+          conceptName: concept?.name ?? update.conceptId,
+          consecutiveFailures: update.consecutiveFailures,
+        };
+      });
+
       const response: SubmitResponse = {
         submission: {
           id: submissionId,
@@ -327,6 +435,8 @@ export const submissionRoutes = new Elysia({ prefix: '/api/submissions' }).post(
         },
         taskAdvanced,
         nextTask,
+        conceptMastery: conceptMasteryResponse,
+        strugglingConcepts: strugglingResponse.length > 0 ? strugglingResponse : undefined,
       };
 
       return response;

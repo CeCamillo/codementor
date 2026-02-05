@@ -1,6 +1,14 @@
+export interface ConceptForReview {
+  conceptId: string;
+  conceptName: string;
+  masteryLevel: number;
+  priority: number;
+}
+
 export interface GenerateProjectRequest {
   description: string;
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  conceptsForReview?: ConceptForReview[];
 }
 
 export interface GeneratedTask {

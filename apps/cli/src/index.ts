@@ -6,6 +6,7 @@ import { next } from './commands/next';
 import { submit } from './commands/submit';
 import { progress } from './commands/progress';
 import { listProjects, switchProject } from './commands/projects';
+import { concepts } from './commands/concepts';
 
 const program = new Command();
 
@@ -70,6 +71,15 @@ program
   .description('View learning progress')
   .action(async () => {
     await progress();
+  });
+
+program
+  .command('concepts')
+  .description('View concept mastery and learning progress')
+  .option('--due', 'Show only concepts due for review')
+  .option('--all', 'Show all concepts without truncation')
+  .action(async (options: { due?: boolean; all?: boolean }) => {
+    await concepts(options);
   });
 
 const projectsCommand = program.command('projects').description('Manage projects');

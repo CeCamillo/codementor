@@ -82,8 +82,12 @@ export interface UserConceptItem {
   category: string;
   masteryLevel: number;
   practiceCount: number;
+  consecutiveFailures: number;
   lastPracticedAt: string | null;
+  nextReviewAt: string | null;
   status: 'not_started' | 'in_progress' | 'mastered';
+  isDueForReview: boolean;
+  isStruggling: boolean;
 }
 
 export interface UserConceptsResponse {
@@ -93,5 +97,12 @@ export interface UserConceptsResponse {
     mastered: number;
     inProgress: number;
     notStarted: number;
+    dueForReview: number;
+    struggling: number;
   };
+}
+
+export interface ConceptsDueResponse {
+  concepts: UserConceptItem[];
+  total: number;
 }

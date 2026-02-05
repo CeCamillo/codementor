@@ -1,4 +1,8 @@
-import type { GeneratedProject, GenerateProjectRequest } from '@codementor/shared';
+import type {
+  GeneratedProject,
+  GenerateProjectRequest,
+  ConceptForReview,
+} from '@codementor/shared';
 import { anthropic, MODELS } from '../client';
 import { getPlaybook } from '../playbooks';
 import { getWebFundamentalsConcepts, getConceptById } from '../concepts';
@@ -118,15 +122,53 @@ function validateAndFilterConceptIds(conceptIds: string[]): string[] {
   return validIds;
 }
 
+function buildConceptsForReviewContext(conceptsForReview: ConceptForReview[] | undefined): string {
+  if (!conceptsForReview || conceptsForReview.length === 0) {
+    return '';
+  }
+
+  let context = '\n\n## Concepts Due for Review\n\n';
+  context += 'The learner should reinforce these concepts in this project:\n\n';
+
+  // Sort by priority (higher first)
+  const sorted = [...conceptsForReview].sort((a, b) => b.priority - a.priority);
+
+  for (const concept of sorted.slice(0, 5)) {
+    // Limit to top 5
+    const masteryLabel =
+      concept.masteryLevel >= 75
+        ? 'mastered'
+        : concept.masteryLevel >= 50
+          ? 'proficient'
+          : concept.masteryLevel >= 25
+            ? 'familiar'
+            : 'novice';
+    context += `- **${concept.conceptName}** (ID: \`${concept.conceptId}\`, currently ${masteryLabel} at ${concept.masteryLevel}%)\n`;
+  }
+
+  context +=
+    '\nWhen generating tasks, try to incorporate opportunities to practice these concepts naturally.';
+  context +=
+    "\nDo NOT force concepts that don't fit the project - only include them if relevant.\n";
+
+  return context;
+}
+
 export async function generateProject(request: GenerateProjectRequest): Promise<GeneratedProject> {
   const playbook = getPlaybook('project-breakdown');
   const conceptReference = buildConceptReference();
+  const conceptsForReviewContext = buildConceptsForReviewContext(request.conceptsForReview);
 
   const difficulty = request.difficulty ?? 'beginner';
 
+  const reviewConceptsInstruction =
+    request.conceptsForReview && request.conceptsForReview.length > 0
+      ? '\n- When appropriate, incorporate concepts due for review (listed below) into tasks'
+      : '';
+
   const systemPrompt = `${playbook}
 
-${conceptReference}
+${conceptReference}${conceptsForReviewContext}
 
 You are generating a learning project for a ${difficulty} developer.
 
@@ -135,7 +177,7 @@ IMPORTANT:
 - Each task should produce visible, working functionality
 - Use ONLY concept IDs from the list above
 - Match task complexity to the ${difficulty} level
-- Estimate realistic times (beginners need more time)`;
+- Estimate realistic times (beginners need more time)${reviewConceptsInstruction}`;
 
   const response = await anthropic.messages.create({
     model: MODELS.SONNET,
