@@ -4,3 +4,5 @@ export * from './playbooks';
 export * from './generators/project-generator';
 export * from './generators/code-reviewer';
 export * from './generators/reflection-followup';
+export * from './generators/hint-generator';
+export * from './generators/struggling-user-handler';
