@@ -106,3 +106,32 @@ export interface ConceptsDueResponse {
   concepts: UserConceptItem[];
   total: number;
 }
+
+export interface ConceptGraphNode {
+  id: string;
+  name: string;
+  category: string;
+  tier: 1 | 2 | 3;
+  masteryLevel: number | null;
+  status: 'not_started' | 'in_progress' | 'mastered';
+  isDueForReview: boolean;
+  isStruggling: boolean;
+  lastPracticedAt: string | null;
+}
+
+export interface ConceptGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+export interface ConceptGraphResponse {
+  nodes: ConceptGraphNode[];
+  edges: ConceptGraphEdge[];
+  summary: {
+    total: number;
+    mastered: number;
+    inProgress: number;
+    notStarted: number;
+  };
+}
