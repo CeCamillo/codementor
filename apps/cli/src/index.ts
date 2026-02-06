@@ -7,6 +7,7 @@ import { submit } from './commands/submit';
 import { progress } from './commands/progress';
 import { listProjects, switchProject } from './commands/projects';
 import { concepts } from './commands/concepts';
+import { showBanner } from './ui';
 
 const program = new Command();
 
@@ -92,9 +93,10 @@ projectsCommand
   });
 
 projectsCommand
-  .command('switch <id>')
+  .command('switch')
   .description('Switch to a different project')
-  .action(async (id: string) => {
+  .argument('[id]', 'Project ID (interactive selector if omitted)')
+  .action(async (id?: string) => {
     await switchProject(id);
   });
 
@@ -102,5 +104,11 @@ projectsCommand
 projectsCommand.action(async () => {
   await listProjects();
 });
+
+// Show banner when no command provided, then exit
+if (process.argv.length <= 2) {
+  showBanner();
+  process.exit(0);
+}
 
 program.parse();

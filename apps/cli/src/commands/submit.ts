@@ -3,6 +3,8 @@ import { api } from '../utils/api';
 import type { SubmitResponse } from '@codementor/shared';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import { join, relative } from 'path';
+import { log, note } from '@clack/prompts';
+import { theme, requireAuth, handleCommandError, withSpinner, formatMasteryBar } from '../ui';
 
 const FILE_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.html', '.css', '.json'];
 const EXCLUDED_DIRS = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage'];
@@ -26,25 +28,19 @@ function collectFiles(dir: string, baseDir: string = dir): FileInfo[] {
       const relativePath = relative(baseDir, fullPath);
 
       if (entry.isDirectory()) {
-        // Skip excluded directories
         if (EXCLUDED_DIRS.includes(entry.name)) {
           continue;
         }
-        // Recurse into subdirectories
         files.push(...collectFiles(fullPath, baseDir));
       } else if (entry.isFile()) {
-        // Check file extension
         const hasValidExtension = FILE_EXTENSIONS.some((ext) => entry.name.endsWith(ext));
         if (!hasValidExtension) {
           continue;
         }
 
-        // Check file size
         const stats = statSync(fullPath);
         if (stats.size > MAX_FILE_SIZE) {
-          console.warn(
-            `\x1b[33mWarning:\x1b[0m Skipping ${relativePath} (exceeds ${MAX_FILE_SIZE / 1024}KB limit)`
-          );
+          log.warn(`Skipping ${relativePath} (exceeds ${MAX_FILE_SIZE / 1024}KB limit)`);
           continue;
         }
 
@@ -56,8 +52,7 @@ function collectFiles(dir: string, baseDir: string = dir): FileInfo[] {
             size: stats.size,
           });
         } catch {
-          // Skip files that can't be read
-          console.warn(`\x1b[33mWarning:\x1b[0m Could not read ${relativePath}`);
+          log.warn(`Could not read ${relativePath}`);
         }
       }
     }
@@ -81,43 +76,23 @@ function printMasteryUpdates(
 ): void {
   if (!conceptMastery || conceptMastery.length === 0) return;
 
-  console.log('\x1b[1mConcept Progress:\x1b[0m');
+  console.log(theme.bold('Concept Progress:'));
   for (const update of conceptMastery) {
     const masteryBar = formatMasteryBar(update.newMasteryLevel);
-    const statusIcon = update.isStruggling ? '\x1b[33m⚠\x1b[0m' : '\x1b[32m↑\x1b[0m';
+    const statusIcon = update.isStruggling ? theme.warning('\u26a0') : theme.success('\u2191');
     console.log(`  ${statusIcon} ${update.conceptName}: ${masteryBar} ${update.newMasteryLevel}%`);
   }
   console.log();
 }
 
-function formatMasteryBar(mastery: number): string {
-  const width = 10;
-  const filled = Math.round((mastery / 100) * width);
-  const empty = width - filled;
-
-  let color: string;
-  if (mastery >= 80) {
-    color = '\x1b[32m'; // green
-  } else if (mastery >= 50) {
-    color = '\x1b[33m'; // yellow
-  } else if (mastery >= 25) {
-    color = '\x1b[34m'; // blue
-  } else {
-    color = '\x1b[31m'; // red
-  }
-
-  return `${color}${'█'.repeat(filled)}\x1b[90m${'░'.repeat(empty)}\x1b[0m`;
-}
-
 function printPassedReview(response: SubmitResponse): void {
   const { review, nextTask, conceptMastery } = response;
 
-  console.log();
-  console.log('\x1b[32m✓ Task Completed!\x1b[0m');
+  log.success('Task Completed!');
   console.log();
 
   // Overall feedback
-  console.log('\x1b[1mOverall:\x1b[0m ' + review.overallFeedback);
+  console.log(`${theme.bold('Overall:')} ${review.overallFeedback}`);
   console.log();
 
   // Show mastery updates
@@ -126,11 +101,11 @@ function printPassedReview(response: SubmitResponse): void {
   // What you did well (concepts demonstrated)
   const demonstrated = review.conceptsFeedback.filter((cf) => cf.demonstrated);
   if (demonstrated.length > 0) {
-    console.log('\x1b[1mWhat you did well:\x1b[0m');
+    console.log(theme.bold('What you did well:'));
     for (const cf of demonstrated) {
-      console.log(`  \x1b[32m✓\x1b[0m ${cf.conceptName}`);
+      console.log(`  ${theme.success('\u2713')} ${cf.conceptName}`);
       if (cf.feedback) {
-        console.log(`    \x1b[90m${cf.feedback}\x1b[0m`);
+        console.log(`    ${theme.muted(cf.feedback)}`);
       }
     }
     console.log();
@@ -139,13 +114,15 @@ function printPassedReview(response: SubmitResponse): void {
   // Praise comments
   const praiseComments = review.codeComments.filter((c) => c.severity === 'praise');
   if (praiseComments.length > 0) {
-    console.log('\x1b[1mCode highlights:\x1b[0m');
+    console.log(theme.bold('Code highlights:'));
     for (const comment of praiseComments) {
       const lineRange =
         comment.lineStart === comment.lineEnd
           ? `${comment.lineStart}`
           : `${comment.lineStart}-${comment.lineEnd}`;
-      console.log(`  \x1b[36m${comment.filePath}:${lineRange}\x1b[0m \x1b[32m[praise]\x1b[0m`);
+      console.log(
+        `  ${theme.filePath(`${comment.filePath}:${lineRange}`)} ${theme.success('[praise]')}`
+      );
       console.log(`  ${comment.message}`);
       console.log();
     }
@@ -153,9 +130,9 @@ function printPassedReview(response: SubmitResponse): void {
 
   // Reflection questions
   if (review.reflectionQuestions.length > 0) {
-    console.log('\x1b[1mReflection:\x1b[0m');
+    console.log(theme.bold('Reflection:'));
     for (const question of review.reflectionQuestions) {
-      console.log(`  \x1b[90m•\x1b[0m ${question}`);
+      console.log(`  ${theme.muted('\u2022')} ${question}`);
     }
     console.log();
   }
@@ -163,38 +140,30 @@ function printPassedReview(response: SubmitResponse): void {
   // Next task info
   if (nextTask) {
     console.log(
-      `\x1b[1mNext up:\x1b[0m Task ${nextTask.order}/${nextTask.order} - ${nextTask.title}`
+      `${theme.bold('Next up:')} Task ${nextTask.order}/${nextTask.order} - ${nextTask.title}`
     );
-    console.log('\x1b[90mRun\x1b[0m codementor next \x1b[90mto see task details.\x1b[0m');
+    console.log(
+      `${theme.muted('Run')} ${theme.command('codementor next')} ${theme.muted('to see task details.')}`
+    );
   } else {
-    console.log('\x1b[32m🎉 Project completed!\x1b[0m');
-    console.log('\x1b[90mStart a new project with:\x1b[0m codementor start "<description>"');
+    log.success('Project completed!');
+    console.log(
+      `${theme.muted('Start a new project with:')} ${theme.command('codementor start "<description>"')}`
+    );
   }
 }
 
 function printStrugglingAlert(
   strugglingConcepts: Array<{ conceptId: string; conceptName: string; consecutiveFailures: number }>
 ): void {
-  console.log();
-  console.log('\x1b[35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m');
-  console.log('\x1b[35m  We noticed you might be stuck on some concepts.\x1b[0m');
-  console.log("\x1b[35m  That's completely normal - learning takes time!\x1b[0m");
-  console.log('\x1b[35m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m');
-  console.log();
+  const lines = strugglingConcepts
+    .map((c) => `${theme.warning('\u26a0')}  ${c.conceptName} - ${c.consecutiveFailures} attempts`)
+    .join('\n');
 
-  for (const concept of strugglingConcepts) {
-    console.log(
-      `  \x1b[33m⚠\x1b[0m  ${concept.conceptName} - ${concept.consecutiveFailures} attempts`
-    );
-  }
-  console.log();
-
-  console.log('\x1b[1mSuggestions:\x1b[0m');
-  console.log('  1. Take a short break and return with fresh eyes');
-  console.log('  2. Try \x1b[33mcodementor hint\x1b[0m for guidance');
-  console.log('  3. Review the concept in \x1b[33mcodementor concepts\x1b[0m');
-  console.log('  4. Consider breaking the task into smaller pieces');
-  console.log();
+  note(
+    `${lines}\n\n${theme.bold('Suggestions:')}\n1. Take a short break and return with fresh eyes\n2. Try ${theme.command('codementor hint')} for guidance\n3. Review the concept in ${theme.command('codementor concepts')}\n4. Consider breaking the task into smaller pieces`,
+    "We noticed you might be stuck - that's completely normal!"
+  );
 }
 
 function printNeedsWorkReview(response: SubmitResponse): void {
@@ -205,12 +174,11 @@ function printNeedsWorkReview(response: SubmitResponse): void {
     printStrugglingAlert(strugglingConcepts);
   }
 
-  console.log();
-  console.log('\x1b[33m○ Almost there!\x1b[0m');
+  log.warn('Almost there!');
   console.log();
 
   // Overall feedback
-  console.log('\x1b[1mOverall:\x1b[0m ' + review.overallFeedback);
+  console.log(`${theme.bold('Overall:')} ${review.overallFeedback}`);
   console.log();
 
   // Show mastery updates
@@ -223,15 +191,15 @@ function printNeedsWorkReview(response: SubmitResponse): void {
   const suggestionComments = review.codeComments.filter((c) => c.severity === 'suggestion');
 
   if (issueComments.length > 0) {
-    console.log('\x1b[1mThings to address:\x1b[0m');
+    console.log(theme.bold('Things to address:'));
     for (const comment of issueComments) {
       const lineRange =
         comment.lineStart === comment.lineEnd
           ? `${comment.lineStart}`
           : `${comment.lineStart}-${comment.lineEnd}`;
-      const severityColor = comment.severity === 'critical' ? '\x1b[31m' : '\x1b[33m';
+      const severityColor = comment.severity === 'critical' ? theme.error : theme.warning;
       console.log(
-        `  \x1b[36m${comment.filePath}:${lineRange}\x1b[0m ${severityColor}[${comment.severity}]\x1b[0m`
+        `  ${theme.filePath(`${comment.filePath}:${lineRange}`)} ${severityColor(`[${comment.severity}]`)}`
       );
       console.log(`  ${comment.message}`);
       console.log();
@@ -239,13 +207,15 @@ function printNeedsWorkReview(response: SubmitResponse): void {
   }
 
   if (suggestionComments.length > 0) {
-    console.log('\x1b[1mSuggestions:\x1b[0m');
+    console.log(theme.bold('Suggestions:'));
     for (const comment of suggestionComments) {
       const lineRange =
         comment.lineStart === comment.lineEnd
           ? `${comment.lineStart}`
           : `${comment.lineStart}-${comment.lineEnd}`;
-      console.log(`  \x1b[36m${comment.filePath}:${lineRange}\x1b[0m \x1b[34m[suggestion]\x1b[0m`);
+      console.log(
+        `  ${theme.filePath(`${comment.filePath}:${lineRange}`)} ${theme.blue('[suggestion]')}`
+      );
       console.log(`  ${comment.message}`);
       console.log();
     }
@@ -254,11 +224,11 @@ function printNeedsWorkReview(response: SubmitResponse): void {
   // Areas to focus (concepts not demonstrated)
   const notDemonstrated = review.conceptsFeedback.filter((cf) => !cf.demonstrated);
   if (notDemonstrated.length > 0) {
-    console.log('\x1b[1mAreas to focus:\x1b[0m');
+    console.log(theme.bold('Areas to focus:'));
     for (const cf of notDemonstrated) {
-      console.log(`  \x1b[33m○\x1b[0m ${cf.conceptName}`);
+      console.log(`  ${theme.warning('\u25cb')} ${cf.conceptName}`);
       if (cf.feedback) {
-        console.log(`    \x1b[90m${cf.feedback}\x1b[0m`);
+        console.log(`    ${theme.muted(cf.feedback)}`);
       }
     }
     console.log();
@@ -266,69 +236,62 @@ function printNeedsWorkReview(response: SubmitResponse): void {
 
   // Reflection questions
   if (review.reflectionQuestions.length > 0) {
-    console.log('\x1b[1mThink about:\x1b[0m');
+    console.log(theme.bold('Think about:'));
     for (const question of review.reflectionQuestions) {
-      console.log(`  \x1b[90m•\x1b[0m ${question}`);
+      console.log(`  ${theme.muted('\u2022')} ${question}`);
     }
     console.log();
   }
 
   // Suggested resources
   if (review.suggestedResources.length > 0) {
-    console.log('\x1b[1mResources:\x1b[0m');
+    console.log(theme.bold('Resources:'));
     for (const resource of review.suggestedResources) {
       console.log(`  - ${resource}`);
     }
     console.log();
   }
 
-  console.log('\x1b[90mRun\x1b[0m codementor submit \x1b[90magain after making changes.\x1b[0m');
+  console.log(
+    `${theme.muted('Run')} ${theme.command('codementor submit')} ${theme.muted('again after making changes.')}`
+  );
 }
 
 export async function submit(): Promise<void> {
-  if (!isAuthenticated()) {
-    console.error(
-      '\x1b[31mError:\x1b[0m Not authenticated. Run \x1b[33mcodementor login\x1b[0m first.'
-    );
-    process.exit(1);
-  }
+  requireAuth(isAuthenticated());
 
   // Collect files from current directory
   const cwd = process.cwd();
-  console.log('\x1b[90mScanning for code files...\x1b[0m');
-
   const files = collectFiles(cwd);
 
   if (files.length === 0) {
-    console.error('\x1b[31mError:\x1b[0m No code files found in current directory.');
-    console.error();
-    console.error('Looking for files with these extensions:');
-    console.error(`  ${FILE_EXTENSIONS.join(', ')}`);
-    console.error();
-    console.error('Make sure you are in the project directory with your code files.');
+    log.error('No code files found in current directory.');
+    console.log();
+    console.log('  Looking for files with these extensions:');
+    console.log(`    ${FILE_EXTENSIONS.join(', ')}`);
+    console.log();
+    console.log('  Make sure you are in the project directory with your code files.');
     process.exit(1);
   }
 
   // Check total size
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   if (totalSize > MAX_TOTAL_SIZE) {
-    console.error(
-      `\x1b[31mError:\x1b[0m Total file size (${(totalSize / 1024).toFixed(1)}KB) exceeds ${MAX_TOTAL_SIZE / 1024}KB limit.`
+    log.error(
+      `Total file size (${(totalSize / 1024).toFixed(1)}KB) exceeds ${MAX_TOTAL_SIZE / 1024}KB limit.`
     );
-    console.error('Try removing unnecessary files or splitting your project.');
+    console.log('  Try removing unnecessary files or splitting your project.');
     process.exit(1);
   }
 
-  console.log(
-    `\x1b[90mFound ${files.length} file(s): ${files.map((f) => f.path).join(', ')}\x1b[0m`
-  );
-  console.log();
-  console.log('\x1b[90mSubmitting for review...\x1b[0m');
+  log.info(`Found ${files.length} file(s): ${theme.muted(files.map((f) => f.path).join(', '))}`);
 
   try {
-    const response = await api.post<SubmitResponse>('/api/submissions', {
-      files: files.map((f) => ({ path: f.path, content: f.content })),
-    });
+    const response = await withSpinner('Submitting for review...', () =>
+      api.post<SubmitResponse>('/api/submissions', {
+        files: files.map((f) => ({ path: f.path, content: f.content })),
+      })
+    );
 
     if (response.review.passed) {
       printPassedReview(response);
@@ -337,32 +300,28 @@ export async function submit(): Promise<void> {
     }
   } catch (error) {
     if (error instanceof Error) {
-      // Handle specific error cases
       if (error.message.includes('No active project')) {
-        console.error('\x1b[31mError:\x1b[0m No active project found.');
-        console.error();
-        console.error('Start a new project with:');
-        console.error('  codementor start "<description>"');
+        log.error('No active project found.');
+        console.log();
+        console.log('  Start a new project with:');
+        console.log(`    ${theme.command('codementor start "<description>"')}`);
         process.exit(1);
       }
 
       if (error.message.includes('No files provided')) {
-        console.error('\x1b[31mError:\x1b[0m No code files found in current directory.');
+        log.error('No code files found in current directory.');
         process.exit(1);
       }
 
       if (error.message.includes('already completed')) {
-        console.error('\x1b[31mError:\x1b[0m Project already completed!');
-        console.error();
-        console.error('Start a new project with:');
-        console.error('  codementor start "<description>"');
+        log.error('Project already completed!');
+        console.log();
+        console.log('  Start a new project with:');
+        console.log(`    ${theme.command('codementor start "<description>"')}`);
         process.exit(1);
       }
-
-      console.error(`\x1b[31mError:\x1b[0m ${error.message}`);
-    } else {
-      console.error('\x1b[31mError:\x1b[0m Failed to submit code for review.');
     }
-    process.exit(1);
+
+    handleCommandError(error, 'Failed to submit code for review.');
   }
 }

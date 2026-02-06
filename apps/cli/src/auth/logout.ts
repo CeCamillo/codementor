@@ -1,11 +1,12 @@
 import { clearConfig, getAccessToken } from './config';
 import { getApiUrl } from '../utils/api';
+import { log } from '@clack/prompts';
 
 export async function logout(): Promise<void> {
   const token = getAccessToken();
 
   if (!token) {
-    console.log('You are not logged in.');
+    log.warn('You are not logged in.');
     return;
   }
 
@@ -23,5 +24,5 @@ export async function logout(): Promise<void> {
   }
 
   clearConfig();
-  console.log('Successfully logged out.');
+  log.success('Successfully logged out.');
 }

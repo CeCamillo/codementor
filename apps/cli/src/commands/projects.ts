@@ -1,63 +1,38 @@
 import { isAuthenticated } from '../auth';
 import { api } from '../utils/api';
 import type { ProjectsListResponse, ProjectSwitchResponse } from '@codementor/shared';
-
-function getStatusIcon(status: string): string {
-  switch (status) {
-    case 'completed':
-      return '\x1b[32m\u2713\x1b[0m'; // green checkmark
-    case 'in_progress':
-      return '\x1b[33m\u25cb\x1b[0m'; // yellow circle
-    case 'not_started':
-      return '\x1b[90m\u25cb\x1b[0m'; // gray circle
-    case 'abandoned':
-      return '\x1b[90m\u2717\x1b[0m'; // gray x
-    default:
-      return '\x1b[90m-\x1b[0m';
-  }
-}
-
-function getStatusLabel(status: string): string {
-  switch (status) {
-    case 'completed':
-      return '\x1b[32mcompleted\x1b[0m';
-    case 'in_progress':
-      return '\x1b[33min progress\x1b[0m';
-    case 'not_started':
-      return '\x1b[90mnot started\x1b[0m';
-    case 'abandoned':
-      return '\x1b[90mabandoned\x1b[0m';
-    default:
-      return status;
-  }
-}
+import { select, isCancel, log } from '@clack/prompts';
+import {
+  theme,
+  requireAuth,
+  handleCommandError,
+  withSpinner,
+  getStatusIcon,
+  getStatusLabel,
+} from '../ui';
 
 export async function listProjects(): Promise<void> {
-  if (!isAuthenticated()) {
-    console.error(
-      '\x1b[31mError:\x1b[0m Not authenticated. Run \x1b[33mcodementor login\x1b[0m first.'
-    );
-    process.exit(1);
-  }
+  requireAuth(isAuthenticated());
 
   try {
-    const response = await api.get<ProjectsListResponse>('/api/projects/list');
+    const response = await withSpinner('Fetching projects...', () =>
+      api.get<ProjectsListResponse>('/api/projects/list')
+    );
 
     if (response.projects.length === 0) {
+      log.warn('No projects yet');
       console.log();
-      console.log('\x1b[33mNo projects yet\x1b[0m');
+      console.log('  Start your first project with:');
+      console.log(`    ${theme.command('codementor start "<description>"')}`);
       console.log();
-      console.log('Start your first project with:');
-      console.log('  codementor start "<description>"');
-      console.log();
-      console.log('Example:');
-      console.log('  codementor start "Build a todo app with React"');
+      console.log('  Example:');
+      console.log(`    ${theme.command('codementor start "Build a todo app with React"')}`);
       console.log();
       return;
     }
 
     console.log();
-    console.log('\x1b[1mYour Projects\x1b[0m');
+    console.log(theme.bold('Your Projects'));
     console.log();
 
     for (const project of response.projects) {
@@ -65,54 +40,71 @@ export async function listProjects(): Promise<void> {
       const statusLabel = getStatusLabel(project.status);
       const taskProgress = `${project.tasks.completed}/${project.tasks.total} tasks`;
 
-      console.log(`${statusIcon} \x1b[1m${project.title}\x1b[0m`);
-      console.log(`  ID: \x1b[36m${project.id}\x1b[0m`);
+      console.log(`${statusIcon} ${theme.bold(project.title)}`);
+      console.log(`  ID: ${theme.info(project.id)}`);
       console.log(`  Status: ${statusLabel} | ${taskProgress}`);
       console.log(`  Difficulty: ${project.difficulty}`);
       console.log();
     }
 
-    console.log('\x1b[90mSwitch projects with:\x1b[0m codementor projects switch <id>');
+    console.log(
+      `${theme.muted('Switch projects with:')} ${theme.command('codementor projects switch')}`
+    );
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`\x1b[31mError:\x1b[0m ${error.message}`);
-    } else {
-      console.error('\x1b[31mError:\x1b[0m Failed to fetch projects.');
-    }
-    process.exit(1);
+    handleCommandError(error, 'Failed to fetch projects.');
   }
 }
 
-export async function switchProject(id: string): Promise<void> {
-  if (!isAuthenticated()) {
-    console.error(
-      '\x1b[31mError:\x1b[0m Not authenticated. Run \x1b[33mcodementor login\x1b[0m first.'
-    );
-    process.exit(1);
-  }
+export async function switchProject(id?: string): Promise<void> {
+  requireAuth(isAuthenticated());
 
   try {
-    const response = await api.post<ProjectSwitchResponse>(`/api/projects/${id}/switch`);
+    // If no ID provided, show interactive selector
+    if (!id) {
+      const response = await withSpinner('Fetching projects...', () =>
+        api.get<ProjectsListResponse>('/api/projects/list')
+      );
 
-    console.log();
-    console.log(`\x1b[32mSwitched to:\x1b[0m ${response.project.title}`);
-    console.log();
+      if (response.projects.length === 0) {
+        log.warn('No projects to switch to. Create one first.');
+        return;
+      }
+
+      const selected = await select({
+        message: 'Select a project:',
+        options: response.projects.map((p) => ({
+          value: p.id,
+          label: `${getStatusIcon(p.status)} ${p.title}`,
+          hint: `${p.tasks.completed}/${p.tasks.total} tasks \u2022 ${p.difficulty}`,
+        })),
+      });
+
+      if (isCancel(selected)) {
+        log.warn('Cancelled.');
+        return;
+      }
+
+      id = selected as string;
+    }
+
+    const response = await withSpinner('Switching project...', () =>
+      api.post<ProjectSwitchResponse>(`/api/projects/${id}/switch`)
+    );
+
+    log.success(`Switched to: ${response.project.title}`);
 
     if (response.currentTask) {
       console.log(
-        `Current task: Task ${response.currentTask.order} - ${response.currentTask.title}`
+        `  Current task: Task ${response.currentTask.order} - ${response.currentTask.title}`
       );
       console.log();
-      console.log('\x1b[90mRun\x1b[0m codementor next \x1b[90mto see task details.\x1b[0m');
+      console.log(
+        `${theme.muted('Run')} ${theme.command('codementor next')} ${theme.muted('to see task details.')}`
+      );
     } else {
-      console.log('No current task available.');
+      console.log('  No current task available.');
     }
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`\x1b[31mError:\x1b[0m ${error.message}`);
-    } else {
-      console.error('\x1b[31mError:\x1b[0m Failed to switch project.');
-    }
-    process.exit(1);
+    handleCommandError(error, 'Failed to switch project.');
   }
 }
