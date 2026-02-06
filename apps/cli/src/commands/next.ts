@@ -5,6 +5,8 @@ import type {
   AllTasksCompletedResponse,
   CurrentTaskApiResponse,
 } from '@codementor/shared';
+import { log, note } from '@clack/prompts';
+import { theme, requireAuth, handleCommandError, withSpinner } from '../ui';
 
 function isCompletedResponse(
   response: CurrentTaskApiResponse
@@ -16,34 +18,33 @@ function printCurrentTask(response: CurrentTaskResponse): void {
   const { project, task, progress } = response;
 
   console.log();
-  console.log(`\x1b[1m${project.title}\x1b[0m \x1b[90m(${project.difficulty})\x1b[0m`);
+  console.log(`${theme.bold(project.title)} ${theme.muted(`(${project.difficulty})`)}`);
   console.log();
 
   // Task header with progress
-  console.log(`\x1b[1mTask ${progress.currentTask}/${progress.totalTasks}: ${task.title}\x1b[0m`);
+  console.log(theme.bold(`Task ${progress.currentTask}/${progress.totalTasks}: ${task.title}`));
   console.log();
 
   // Concepts
   if (task.concepts.length > 0) {
     const conceptNames = task.concepts.map((c) => c.name).join(', ');
-    console.log(`\x1b[36mConcepts:\x1b[0m ${conceptNames}`);
+    console.log(`${theme.info('Concepts:')} ${conceptNames}`);
     console.log();
   }
 
-  // Description
-  console.log(task.description);
-  console.log();
+  // Description in a box
+  note(task.description, 'Description');
 
   // Objectives
-  console.log('\x1b[1mObjectives:\x1b[0m');
+  console.log(theme.bold('Objectives:'));
   for (const objective of task.objectives) {
-    console.log(`  \x1b[90m○\x1b[0m ${objective}`);
+    console.log(`  ${theme.muted('\u25cb')} ${objective}`);
   }
   console.log();
 
   // Hints
   if (task.hints.length > 0) {
-    console.log('\x1b[33m💡 Hints:\x1b[0m');
+    console.log(`${theme.warning('\ud83d\udca1')} ${theme.bold('Hints:')}`);
     for (const hint of task.hints) {
       console.log(`  - ${hint}`);
     }
@@ -56,39 +57,39 @@ function printCurrentTask(response: CurrentTaskResponse): void {
       c.resources.map((r) => ({ ...r, conceptName: c.name }))
     );
     if (allResources.length > 0) {
-      console.log('\x1b[1m📚 Resources:\x1b[0m');
+      console.log(`${theme.bold('\ud83d\udcda Resources:')}`);
       for (const resource of allResources.slice(0, 3)) {
-        console.log(`  - ${resource.title}: \x1b[36m${resource.url}\x1b[0m`);
+        console.log(`  - ${resource.title}: ${theme.info(resource.url)}`);
       }
       console.log();
     }
   }
 
   // Footer
-  console.log('\x1b[90mRun\x1b[0m codementor submit \x1b[90mwhen ready for review.\x1b[0m');
+  console.log(
+    `${theme.muted('Run')} ${theme.command('codementor submit')} ${theme.muted('when ready for review.')}`
+  );
 }
 
 function printCompletedMessage(response: AllTasksCompletedResponse): void {
   const { project, progress } = response;
 
-  console.log();
-  console.log(
-    `\x1b[32m🎉 Congratulations!\x1b[0m You've completed all ${progress.totalTasks} tasks in \x1b[1m${project.title}\x1b[0m!`
+  log.success(
+    `Congratulations! You've completed all ${progress.totalTasks} tasks in ${theme.bold(project.title)}!`
   );
   console.log();
-  console.log('\x1b[90mStart a new project with:\x1b[0m codementor start "<description>"');
+  console.log(
+    `${theme.muted('Start a new project with:')} ${theme.command('codementor start "<description>"')}`
+  );
 }
 
 export async function next(): Promise<void> {
-  if (!isAuthenticated()) {
-    console.error(
-      '\x1b[31mError:\x1b[0m Not authenticated. Run \x1b[33mcodementor login\x1b[0m first.'
-    );
-    process.exit(1);
-  }
+  requireAuth(isAuthenticated());
 
   try {
-    const response = await api.get<CurrentTaskApiResponse>('/api/tasks/current');
+    const response = await withSpinner('Fetching current task...', () =>
+      api.get<CurrentTaskApiResponse>('/api/tasks/current')
+    );
 
     if (isCompletedResponse(response)) {
       printCompletedMessage(response);
@@ -96,23 +97,17 @@ export async function next(): Promise<void> {
       printCurrentTask(response);
     }
   } catch (error) {
-    if (error instanceof Error) {
-      // Handle specific error cases
-      if (error.message.includes('No active project')) {
-        console.error('\x1b[31mError:\x1b[0m No active project found.');
-        console.error();
-        console.error('Start a new project with:');
-        console.error('  codementor start "<description>"');
-        console.error();
-        console.error('Example:');
-        console.error('  codementor start "Build a todo app with React"');
-        process.exit(1);
-      }
-
-      console.error(`\x1b[31mError:\x1b[0m ${error.message}`);
-    } else {
-      console.error('\x1b[31mError:\x1b[0m Failed to fetch current task.');
+    if (error instanceof Error && error.message.includes('No active project')) {
+      log.error('No active project found.');
+      console.log();
+      console.log('  Start a new project with:');
+      console.log(`    ${theme.command('codementor start "<description>"')}`);
+      console.log();
+      console.log('  Example:');
+      console.log(`    ${theme.command('codementor start "Build a todo app with React"')}`);
+      process.exit(1);
     }
-    process.exit(1);
+
+    handleCommandError(error, 'Failed to fetch current task.');
   }
 }

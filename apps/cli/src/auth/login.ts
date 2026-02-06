@@ -1,6 +1,8 @@
 import open from 'open';
 import { saveConfig, isAuthenticated } from './config';
 import { getApiUrl } from '../utils/api';
+import { spinner, note, log } from '@clack/prompts';
+import pc from 'picocolors';
 
 interface DeviceCodeResponse {
   device_code: string;
@@ -71,7 +73,6 @@ async function pollForToken(
     if (isTokenError(data)) {
       switch (data.error) {
         case 'authorization_pending':
-          process.stdout.write('.');
           continue;
         case 'slow_down':
           interval += 1;
@@ -93,28 +94,33 @@ async function pollForToken(
 
 export async function login(): Promise<void> {
   if (isAuthenticated()) {
-    console.log('You are already logged in. Use "codementor logout" to sign out first.');
+    log.warn(
+      `You are already logged in. Use ${pc.bold(pc.yellow('codementor logout'))} to sign out first.`
+    );
     return;
   }
 
-  console.log('Authenticating with CodeMentor...\n');
-
   try {
+    const s = spinner();
+    s.start('Requesting authentication...');
     const deviceCode = await requestDeviceCode();
+    s.stop('Ready to authenticate');
 
-    console.log('Please visit the following URL to authenticate:');
-    console.log(`\n  ${deviceCode.verification_uri}\n`);
-    console.log(`Enter this code: ${deviceCode.user_code}\n`);
+    note(
+      `Visit: ${pc.cyan(deviceCode.verification_uri)}\nCode:  ${pc.bold(pc.white(deviceCode.user_code))}`,
+      'Authenticate in your browser'
+    );
 
     // Try to open browser automatically
     try {
       await open(deviceCode.verification_uri_complete);
-      console.log('Browser opened automatically.');
+      log.info('Browser opened automatically.');
     } catch {
-      console.log('Could not open browser automatically. Please visit the URL above.');
+      log.warn('Could not open browser automatically. Please visit the URL above.');
     }
 
-    console.log('\nWaiting for authorization');
+    const s2 = spinner();
+    s2.start('Waiting for authorization...');
 
     const token = await pollForToken(
       deviceCode.device_code,
@@ -130,10 +136,11 @@ export async function login(): Promise<void> {
       expiresAt,
     });
 
-    console.log('\n\nSuccessfully logged in!');
+    s2.stop('Authorized');
+    log.success('Successfully logged in!');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`\nLogin failed: ${message}`);
+    log.error(`Login failed: ${message}`);
     process.exit(1);
   }
 }

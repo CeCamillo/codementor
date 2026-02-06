@@ -278,10 +278,12 @@ export const deviceFlowRoutes = new Elysia({ prefix: '/auth/device' })
       // Create a session token
       const refreshToken = generateDeviceCode();
       const sessionId = generateId();
+      const sessionToken = generateDeviceCode();
 
       await db.insert(sessions).values({
         id: sessionId,
         userId: authorizedUser.id,
+        token: sessionToken,
         expiresAt: new Date(Date.now() + 86400 * 30 * 1000), // 30 days
       });
 

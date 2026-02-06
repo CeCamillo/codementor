@@ -1,5 +1,8 @@
 import { getAccessToken, isAuthenticated } from './config';
 import { getApiUrl } from '../utils/api';
+import { note } from '@clack/prompts';
+import pc from 'picocolors';
+import { requireAuth, handleCommandError } from '../ui';
 
 interface UserInfo {
   id: string;
@@ -14,10 +17,7 @@ interface ErrorResponse {
 }
 
 export async function whoami(): Promise<void> {
-  if (!isAuthenticated()) {
-    console.log('Not logged in. Use "codementor login" to authenticate.');
-    process.exit(1);
-  }
+  requireAuth(isAuthenticated());
 
   const token = getAccessToken();
 
@@ -35,12 +35,11 @@ export async function whoami(): Promise<void> {
 
     const user = (await response.json()) as UserInfo;
 
-    console.log(`Logged in as: ${user.name}`);
-    console.log(`Email: ${user.email}`);
-    console.log(`User ID: ${user.id}`);
+    note(
+      `Name:  ${pc.bold(user.name)}\nEmail: ${pc.cyan(user.email)}\nID:    ${pc.dim(user.id)}`,
+      'Logged in as'
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Failed to get user info: ${message}`);
-    process.exit(1);
+    handleCommandError(error, 'Failed to get user info.');
   }
 }

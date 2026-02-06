@@ -2,32 +2,20 @@ import { isAuthenticated } from '../auth';
 import { api } from '../utils/api';
 import type { ProgressApiResponse } from '@codementor/shared';
 import { isNoActiveProjectResponse } from '@codementor/shared';
-
-function formatProgressBar(completed: number, total: number, width: number = 12): string {
-  const percentage = total > 0 ? completed / total : 0;
-  const filled = Math.round(percentage * width);
-  const empty = width - filled;
-  return '\u2588'.repeat(filled) + '\u2591'.repeat(empty);
-}
-
-function formatTime(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${remainingMinutes}m`;
-}
+import { log } from '@clack/prompts';
+import {
+  theme,
+  requireAuth,
+  handleCommandError,
+  withSpinner,
+  formatProgressBar,
+  formatMinutes,
+} from '../ui';
 
 function printProgress(response: ProgressApiResponse): void {
   if (isNoActiveProjectResponse(response)) {
-    console.log();
-    console.log('\x1b[33mNo active project\x1b[0m');
-    console.log();
-    console.log(response.message);
+    log.warn('No active project');
+    console.log(`  ${response.message}`);
     console.log();
     return;
   }
@@ -35,11 +23,11 @@ function printProgress(response: ProgressApiResponse): void {
   const { project, tasks, currentTask, concepts, time, streak } = response;
 
   console.log();
-  console.log(`\x1b[1m${project.title}\x1b[0m \x1b[90m(${project.difficulty})\x1b[0m`);
+  console.log(`${theme.bold(project.title)} ${theme.muted(`(${project.difficulty})`)}`);
   console.log();
 
   // Progress section
-  console.log('\x1b[1mProgress\x1b[0m');
+  console.log(theme.bold('Progress'));
   const percentage = tasks.total > 0 ? Math.round((tasks.completed / tasks.total) * 100) : 0;
   const progressBar = formatProgressBar(tasks.completed, tasks.total);
   console.log(`  Tasks: [${progressBar}] ${tasks.completed}/${tasks.total} (${percentage}%)`);
@@ -50,9 +38,9 @@ function printProgress(response: ProgressApiResponse): void {
   console.log();
 
   // Concepts section
-  console.log('\x1b[1mConcepts Learned\x1b[0m');
-  console.log(`  \x1b[32m\u2713\x1b[0m Mastered: ${concepts.mastered}`);
-  console.log(`  \x1b[90m\u25cb\x1b[0m In Progress: ${concepts.inProgress}`);
+  console.log(theme.bold('Concepts Learned'));
+  console.log(`  ${theme.success('\u2713')} Mastered: ${concepts.mastered}`);
+  console.log(`  ${theme.muted('\u25cb')} In Progress: ${concepts.inProgress}`);
 
   if (concepts.recent.length > 0) {
     console.log('  Recent:');
@@ -63,8 +51,8 @@ function printProgress(response: ProgressApiResponse): void {
   console.log();
 
   // Time & Streak section
-  console.log('\x1b[1mTime & Streak\x1b[0m');
-  console.log(`  Time invested: ${formatTime(time.investedMinutes)}`);
+  console.log(theme.bold('Time & Streak'));
+  console.log(`  Time invested: ${formatMinutes(time.investedMinutes)}`);
 
   const streakText = streak.activeToday
     ? `${streak.currentDays} days (active today)`
@@ -73,26 +61,20 @@ function printProgress(response: ProgressApiResponse): void {
   console.log();
 
   // Footer
-  console.log('\x1b[90mRun\x1b[0m codementor next \x1b[90mto see your current task.\x1b[0m');
+  console.log(
+    `${theme.muted('Run')} ${theme.command('codementor next')} ${theme.muted('to see your current task.')}`
+  );
 }
 
 export async function progress(): Promise<void> {
-  if (!isAuthenticated()) {
-    console.error(
-      '\x1b[31mError:\x1b[0m Not authenticated. Run \x1b[33mcodementor login\x1b[0m first.'
-    );
-    process.exit(1);
-  }
+  requireAuth(isAuthenticated());
 
   try {
-    const response = await api.get<ProgressApiResponse>('/api/progress');
+    const response = await withSpinner('Fetching progress...', () =>
+      api.get<ProgressApiResponse>('/api/progress')
+    );
     printProgress(response);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`\x1b[31mError:\x1b[0m ${error.message}`);
-    } else {
-      console.error('\x1b[31mError:\x1b[0m Failed to fetch progress.');
-    }
-    process.exit(1);
+    handleCommandError(error, 'Failed to fetch progress.');
   }
 }
